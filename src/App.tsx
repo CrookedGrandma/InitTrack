@@ -1,10 +1,11 @@
 import { FluentProvider, makeStyles, webDarkTheme, webLightTheme } from "@fluentui/react-components";
+import { BrowserRouter } from "react-router";
 import Content from "./components/Content";
 import Context from "./components/context/Contexts";
 import ThemeButton from "./components/ThemeButton";
 
 const useStyles = makeStyles({
-    page: {
+    app: {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -20,10 +21,12 @@ export default function App() {
 
     return (
         <FluentProvider id="fluent-root" theme={darkTheme.value ? webDarkTheme : webLightTheme}>
-            <ThemeButton />
-            <div id="page" className={classes.page}>
-                <Content />
-            </div>
+            <BrowserRouter>
+                <ThemeButton />
+                <div id="app" className={classes.app}>
+                    <Content />
+                </div>
+            </BrowserRouter>
         </FluentProvider>
     );
 }
