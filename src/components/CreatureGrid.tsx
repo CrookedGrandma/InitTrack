@@ -16,6 +16,7 @@ import {
     TableColumnSizingOptions,
     Text,
 } from "@fluentui/react-components";
+import { HeartOffRegular } from "@fluentui/react-icons";
 
 enum ColId {
     Initiative = "initiative",
@@ -26,14 +27,18 @@ enum ColId {
 
 type ValState = FieldProps["validationState"];
 type PBColor = ProgressBarProps["color"];
-function getProgressBarProps(hp: Creature["hp"]): [validationState: ValState, color: PBColor] {
+type ValIcon = FieldProps["validationMessageIcon"];
+function getProgressBarProps(hp: Creature["hp"]): [validationState: ValState, color: PBColor, icon: ValIcon] {
     const hpFull = hp.current >= hp.max;
     const hpCritical = hp.current * 10 <= hp.max; // under 10%
+    const dead = hp.current <= 0;
     if (hpFull)
-        return ["success", "success"];
+        return ["success", "success", undefined];
+    if (dead)
+        return ["error", "error", <HeartOffRegular key={null} />];
     if (hpCritical)
-        return ["warning", "warning"];
-    return ["none", "brand"];
+        return ["warning", "warning", undefined];
+    return ["none", "brand", undefined];
 }
 
 const colSizes: TableColumnSizingOptions = {
@@ -88,12 +93,13 @@ export default function CreatureGrid({ data }: Readonly<Props>) {
             renderHeaderCell: () => <Text title="HP">hp</Text>,
             renderCell: creature => {
                 const hp = creature.hp;
-                const [validationState, color] = getProgressBarProps(hp);
+                const [validationState, color, icon] = getProgressBarProps(hp);
                 return (
                     <TableCellLayout content={{ className: classes.bar }}>
                         <Field
                             validationMessage={`${hp.current} / ${hp.max}`}
                             validationState={validationState}
+                            validationMessageIcon={icon}
                         >
                             <ProgressBar value={hp.current} max={hp.max} color={color} thickness="large" />
                         </Field>

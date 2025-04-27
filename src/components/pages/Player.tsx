@@ -31,6 +31,15 @@ const tempData: Creature[] = [
         },
         ac: 18,
     },
+    {
+        initiative: 1,
+        name: "Dooie makker",
+        hp: {
+            current: 0,
+            max: 169,
+        },
+        ac: 0,
+    },
 ];
 
 const useStyles = makeStyles({
