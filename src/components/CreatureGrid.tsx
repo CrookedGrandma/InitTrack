@@ -76,7 +76,7 @@ export default function CreatureGrid({ data }: Readonly<Props>) {
             columnId: ColId.Initiative,
             compare: (a, b) => a.initiative - b.initiative,
             renderHeaderCell: () => <Text title="Initiative">i</Text>,
-            renderCell: creature => <TableCellLayout>{creature.initiative}</TableCellLayout>,
+            renderCell: creature => <TableCellLayout>{creature.initiative.toString()}</TableCellLayout>,
         }),
         createTableColumn<Creature>({
             columnId: ColId.Name,
@@ -104,7 +104,7 @@ export default function CreatureGrid({ data }: Readonly<Props>) {
         createTableColumn<Creature>({
             columnId: ColId.AC,
             renderHeaderCell: () => <Text title="AC">ac</Text>,
-            renderCell: creature => <TableCellLayout>{creature.ac}</TableCellLayout>,
+            renderCell: creature => <TableCellLayout>{creature.ac.toString()}</TableCellLayout>,
         }),
     ];
     return (

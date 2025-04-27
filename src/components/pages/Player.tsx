@@ -1,4 +1,5 @@
 import { makeStyles, Title1 } from "@fluentui/react-components";
+import CreatureAdder from "../CreatureAdder";
 import CreatureGrid from "../CreatureGrid";
 import { useState } from "react";
 
@@ -35,6 +36,7 @@ const tempData: Creature[] = [
 const useStyles = makeStyles({
     container: {
         width: "100%",
+        marginBlockEnd: "2rem",
     },
 });
 
@@ -43,10 +45,13 @@ export default function Player() {
 
     const [data, setData] = useState<Creature[]>(tempData);
 
+    const addCreature = (creature: Creature) => setData([...data, creature]);
+
     return <>
         <Title1>Playing</Title1>
         <div id="table-container" className={classes.container}>
             <CreatureGrid data={data}/>
         </div>
+        <CreatureAdder addCreature={addCreature} />
     </>;
 }
