@@ -1,4 +1,5 @@
 import {
+    Button,
     createTableColumn,
     DataGrid,
     DataGridBody,
@@ -9,6 +10,11 @@ import {
     Field,
     FieldProps,
     makeStyles,
+    Menu,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
     ProgressBar,
     ProgressBarProps,
     TableCellLayout,
@@ -16,13 +22,15 @@ import {
     TableColumnSizingOptions,
     Text,
 } from "@fluentui/react-components";
-import { HeartOffRegular } from "@fluentui/react-icons";
+import { DeleteFilled, HeartOffRegular, MoreVerticalFilled } from "@fluentui/react-icons";
+import { sharedStyles } from "../util";
 
 enum ColId {
     Initiative = "initiative",
     Name = "name",
     HP = "hp",
     AC = "ac",
+    Actions = "actions",
 }
 
 type ValState = FieldProps["validationState"];
@@ -58,10 +66,14 @@ const colSizes: TableColumnSizingOptions = {
         minWidth: 20,
         idealWidth: 20,
     },
+    [ColId.Actions]: {
+        minWidth: 32,
+    },
 };
 
 interface Props {
     data: Creature[];
+    deleteCreature: (creature: Creature) => void;
 }
 
 const useStyles = makeStyles({
@@ -72,9 +84,11 @@ const useStyles = makeStyles({
         width: "100%",
     },
 });
+const useSharedStyles = sharedStyles();
 
-export default function CreatureGrid({ data }: Readonly<Props>) {
+export default function CreatureGrid({ data, deleteCreature }: Readonly<Props>) {
     const classes = useStyles();
+    const sharedClasses = useSharedStyles();
 
     const columns: TableColumnDefinition<Creature>[] = [
         createTableColumn<Creature>({
@@ -111,6 +125,28 @@ export default function CreatureGrid({ data }: Readonly<Props>) {
             columnId: ColId.AC,
             renderHeaderCell: () => <Text title="AC">ac</Text>,
             renderCell: creature => <TableCellLayout>{creature.ac.toString()}</TableCellLayout>,
+        }),
+        createTableColumn<Creature>({
+            columnId: ColId.Actions,
+            renderCell: creature => <>
+                <div style={{ flexGrow: 1 }} />
+                <Menu>
+                    <MenuTrigger>
+                        <Button icon={<MoreVerticalFilled/>}/>
+                    </MenuTrigger>
+                    <MenuPopover>
+                        <MenuList>
+                            <MenuItem
+                                className={sharedClasses.danger}
+                                icon={<DeleteFilled className={sharedClasses.dangerHover} />}
+                                onClick={() => deleteCreature(creature)}
+                            >
+                                Delete
+                            </MenuItem>
+                        </MenuList>
+                    </MenuPopover>
+                </Menu>
+            </>,
         }),
     ];
     return (

@@ -1,3 +1,5 @@
+import { makeStyles, tokens } from "@fluentui/react-components";
+
 export function emptyCreature(): OptionalNull<Creature> {
     return {
         initiative: null,
@@ -16,4 +18,20 @@ export function isValidCreature(creature: OptionalNull<Creature>): creature is C
         && creature.hp.current != null
         && creature.hp.max != null
         && creature.ac != null;
+}
+
+export function sharedStyles() {
+    return makeStyles({
+        danger: {
+            color: tokens.colorStatusDangerForeground1,
+        },
+        dangerHover: {
+            ["&:hover"]: {
+                color: tokens.colorStatusDangerBackground3Hover,
+            },
+            ["&:active"]: {
+                color: tokens.colorStatusDangerBackground3Pressed,
+            },
+        },
+    });
 }

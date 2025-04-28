@@ -26,9 +26,10 @@ const useStyles = makeStyles({
     },
     fieldsContainer: {
         display: "flex",
-        width: "100%",
+        width: "calc(100% - 1rem)",
         justifyContent: "space-between",
         gap: "0.5rem",
+        padding: "0 0.5rem",
     },
     field: {
         height: "fit-content",
@@ -154,7 +155,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                         />
                     </Field>
                 </div>
-                <div style={{ flexGrow: 1.4 }} />
+                <div style={{ flexGrow: 1.6 }} />
                 <Field
                     required
                     className={classes.field}

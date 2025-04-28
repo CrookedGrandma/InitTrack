@@ -55,11 +55,12 @@ export default function Player() {
     const [data, setData] = useState<Creature[]>(tempData);
 
     const addCreature = (creature: Creature) => setData([...data, creature]);
+    const deleteCreature = (creature: Creature) => setData(data.filter(c => c !== creature));
 
     return <>
         <Title1>Playing</Title1>
         <div id="table-container" className={classes.container}>
-            <CreatureGrid data={data}/>
+            <CreatureGrid data={data} deleteCreature={deleteCreature} />
         </div>
         <CreatureAdder addCreature={addCreature} />
     </>;
