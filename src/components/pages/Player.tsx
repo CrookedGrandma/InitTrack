@@ -5,6 +5,7 @@ import { useState } from "react";
 
 const tempData: Creature[] = [
     {
+        id: crypto.randomUUID(),
         initiative: 18,
         name: "Goblin",
         hp: {
@@ -14,6 +15,7 @@ const tempData: Creature[] = [
         ac: 12,
     },
     {
+        id: crypto.randomUUID(),
         initiative: 15,
         name: "Evil Wizard",
         hp: {
@@ -23,6 +25,7 @@ const tempData: Creature[] = [
         ac: 14,
     },
     {
+        id: crypto.randomUUID(),
         initiative: 20,
         name: "De Grote Held",
         hp: {
@@ -32,6 +35,7 @@ const tempData: Creature[] = [
         ac: 18,
     },
     {
+        id: crypto.randomUUID(),
         initiative: 1,
         name: "Dooie makker",
         hp: {
@@ -54,14 +58,17 @@ export default function Player() {
 
     const [data, setData] = useState<Creature[]>(tempData);
 
-    const addCreature = (creature: Creature) => setData([...data, creature]);
-    const deleteCreature = (creature: Creature) => setData(data.filter(c => c !== creature));
+    const editData = {
+        addCreature: (creature: Creature) => setData([...data, creature]),
+        deleteCreature: (creature: Creature) => setData(data.filter(c => c.id !== creature.id)),
+        updateCreature: (creature: Creature) => setData(data.map(c => c.id === creature.id ? creature : c)),
+    };
 
     return <>
         <Title1>Playing</Title1>
         <div id="table-container" className={classes.container}>
-            <CreatureGrid data={data} deleteCreature={deleteCreature} />
+            <CreatureGrid data={data} editData={editData} />
         </div>
-        <CreatureAdder addCreature={addCreature} />
+        <CreatureAdder addCreature={editData.addCreature} />
     </>;
 }

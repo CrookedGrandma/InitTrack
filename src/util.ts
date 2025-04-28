@@ -1,7 +1,21 @@
-import { makeStyles, tokens } from "@fluentui/react-components";
+import {
+    InputOnChangeData,
+    InputProps,
+    makeStyles,
+    SpinButtonOnChangeData,
+    SpinButtonProps,
+    tokens,
+} from "@fluentui/react-components";
+import { Dispatch } from "react";
+
+export function cloneWithout<T extends AnyObject>(obj: T, key: keyof T): Omit<T, keyof T> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used to remove the key from the object
+    return (({ [key]: _, ...rest }) => rest)(obj);
+}
 
 export function emptyCreature(): OptionalNull<Creature> {
     return {
+        id: crypto.randomUUID(),
         initiative: null,
         name: null,
         hp: {
@@ -34,4 +48,33 @@ export function sharedStyles() {
             },
         },
     });
+}
+
+export function createSetterInput(
+    [creature, setCreature]: [OptionalNull<Creature>, Dispatch<OptionalNull<Creature>>],
+    property: keyof Creature): InputProps["onChange"] {
+    return (_: any, data: InputOnChangeData) => {
+        console.log(data);
+        if (!creature)
+            throw Error("No creature is set");
+        setCreature({ ...creature, [property]: data.value });
+    };
+}
+
+export function createSetterSpinButton<K extends keyof Creature>(
+    [creature, setCreature]: [OptionalNull<Creature>, Dispatch<OptionalNull<Creature>>],
+    property: K,
+    subProperty?: keyof Creature[K]): SpinButtonProps["onChange"] {
+    return (_: any, data: SpinButtonOnChangeData) => {
+        console.log(data);
+        if (!creature)
+            throw Error("No creature is set");
+        let value: number | null = data.value ?? parseFloat(data.displayValue as string);
+        if (Number.isNaN(value))
+            value = null;
+        const propertyValue = subProperty
+            ? { ...creature[property] as AnyObject, [subProperty]: value }
+            : value;
+        setCreature({ ...creature, [property]: propertyValue });
+    };
 }

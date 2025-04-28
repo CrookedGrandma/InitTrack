@@ -3,13 +3,13 @@ import {
     Divider,
     Field,
     Input,
-    InputOnChangeData,
+    InputProps,
     makeStyles,
     SpinButton,
-    SpinButtonOnChangeData,
+    SpinButtonProps,
     tokens,
 } from "@fluentui/react-components";
-import { emptyCreature, isValidCreature } from "../util";
+import { createSetterInput, createSetterSpinButton, emptyCreature, isValidCreature } from "../util";
 import { AddSquareRegular } from "@fluentui/react-icons";
 import { useState } from "react";
 
@@ -27,7 +27,6 @@ const useStyles = makeStyles({
     fieldsContainer: {
         display: "flex",
         width: "calc(100% - 1rem)",
-        justifyContent: "space-between",
         gap: "0.5rem",
         padding: "0 0.5rem",
     },
@@ -73,27 +72,13 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
         return hasClicked && value == null ? "required" : undefined;
     }
 
-    function setterInput(property: keyof Creature) {
-        return (_: any, data: InputOnChangeData) => {
-            console.log(data);
-            setCreature({ ...creature, [property]: data.value });
-        };
+    function setterInput(property: keyof Creature): InputProps["onChange"] {
+        return createSetterInput([creature, setCreature], property);
     }
 
-    function setterSpinButton<
-        K extends keyof Creature,
-        SubK extends keyof Creature[K] | undefined = undefined,
-    >(property: K, subProperty?: SubK) {
-        return (_: any, data: SpinButtonOnChangeData) => {
-            console.log(data);
-            let value: number | null = data.value ?? parseInt(data.displayValue as string);
-            if (Number.isNaN(value))
-                value = null;
-            const propertyValue = subProperty
-                ? { ...creature[property] as AnyObject, [subProperty]: value }
-                : value;
-            setCreature({ ...creature, [property]: propertyValue });
-        };
+    function setterSpinButton<K extends keyof Creature>(property: K,
+        subProperty?: keyof Creature[K]): SpinButtonProps["onChange"] {
+        return createSetterSpinButton([creature, setCreature], property, subProperty);
     }
 
     return (

@@ -9,6 +9,8 @@ import {
     DataGridRow,
     Field,
     FieldProps,
+    Input,
+    InputProps,
     makeStyles,
     Menu,
     MenuItem,
@@ -17,13 +19,16 @@ import {
     MenuTrigger,
     ProgressBar,
     ProgressBarProps,
+    SpinButton,
+    SpinButtonProps,
     TableCellLayout,
     TableColumnDefinition,
     TableColumnSizingOptions,
     Text,
 } from "@fluentui/react-components";
-import { DeleteFilled, HeartOffRegular, MoreVerticalFilled } from "@fluentui/react-icons";
-import { sharedStyles } from "../util";
+import { CheckmarkFilled, DeleteFilled, EditRegular, HeartOffRegular, MoreVerticalFilled } from "@fluentui/react-icons";
+import { cloneWithout, createSetterInput, createSetterSpinButton, isValidCreature, sharedStyles } from "../util";
+import { useState } from "react";
 
 enum ColId {
     Initiative = "initiative",
@@ -49,31 +54,12 @@ function getProgressBarProps(hp: Creature["hp"]): [validationState: ValState, co
     return ["none", "brand", undefined];
 }
 
-const colSizes: TableColumnSizingOptions = {
-    [ColId.Initiative]: {
-        minWidth: 20,
-        idealWidth: 20,
-    },
-    [ColId.Name]: {
-        autoFitColumns: true,
-        idealWidth: 250,
-    },
-    [ColId.HP]: {
-        minWidth: 100,
-        idealWidth: 300,
-    },
-    [ColId.AC]: {
-        minWidth: 20,
-        idealWidth: 20,
-    },
-    [ColId.Actions]: {
-        minWidth: 32,
-    },
-};
-
 interface Props {
     data: Creature[];
-    deleteCreature: (creature: Creature) => void;
+    editData: {
+        deleteCreature: (creature: Creature) => void;
+        updateCreature: (creature: Creature) => void;
+    };
 }
 
 const useStyles = makeStyles({
@@ -83,24 +69,83 @@ const useStyles = makeStyles({
     bar: {
         width: "100%",
     },
+    hpInputContainer: {
+        display: "flex",
+    },
+    hpInput: {
+        width: "5rem",
+    },
+    hpInputSeparator: {
+        lineHeight: "32px",
+    },
 });
 const useSharedStyles = sharedStyles();
 
-export default function CreatureGrid({ data, deleteCreature }: Readonly<Props>) {
+export default function CreatureGrid({ data, editData }: Readonly<Props>) {
     const classes = useStyles();
     const sharedClasses = useSharedStyles();
+
+    const [editingIds, setEditingIds] = useState<Record<string, Creature>>({});
+
+    function isEditing(creature: Creature) {
+        return creature.id in editingIds;
+    }
+    function startEditingCreature(creature: Creature) {
+        editCreature(creature, true);
+    }
+    function editCreature(creature: Creature, shouldClone: boolean = false) {
+        if (!shouldClone && !isEditing(creature))
+            throw Error("Creature is not being edited");
+        setEditingIds({ ...editingIds, [creature.id]: shouldClone ? { ...creature } : creature });
+    }
+    function saveEditedCreature(creature: Creature) {
+        if (!isEditing(creature))
+            throw Error("Creature was not being edited");
+        const updated = editingIds[creature.id];
+        editData.updateCreature(updated);
+        setEditingIds(cloneWithout(editingIds, creature.id));
+    }
+
+    function setterInput(id: Guid, property: keyof Creature): InputProps["onChange"] {
+        const setCreature = (creature: OptionalNull<Creature>) =>
+            isValidCreature(creature) && editCreature(creature);
+        return createSetterInput([editingIds[id], setCreature], property);
+    }
+
+    function setterSpinButton<K extends keyof Creature>(id: Guid,
+        property: K, subProperty?: keyof Creature[K]): SpinButtonProps["onChange"] {
+        const setCreature = (creature: OptionalNull<Creature>) =>
+            isValidCreature(creature) && editCreature(creature);
+        return createSetterSpinButton([editingIds[id], setCreature], property, subProperty);
+    }
 
     const columns: TableColumnDefinition<Creature>[] = [
         createTableColumn<Creature>({
             columnId: ColId.Initiative,
             compare: (a, b) => a.initiative - b.initiative,
             renderHeaderCell: () => <Text title="Initiative">i</Text>,
-            renderCell: creature => <TableCellLayout>{creature.initiative.toString()}</TableCellLayout>,
+            renderCell: creature => <TableCellLayout>
+                {isEditing(creature)
+                    ? <SpinButton
+                            // step={1}
+                            value={editingIds[creature.id].initiative}
+                            onChange={setterSpinButton(creature.id, "initiative")}
+                        />
+                    : creature.initiative.toString()}
+            </TableCellLayout>,
         }),
         createTableColumn<Creature>({
             columnId: ColId.Name,
             renderHeaderCell: () => <Text title="Name">name</Text>,
-            renderCell: creature => <TableCellLayout appearance="primary">{creature.name}</TableCellLayout>,
+            renderCell: creature => <TableCellLayout appearance="primary">
+                {isEditing(creature)
+                    ? <Input
+                            type="text"
+                            value={editingIds[creature.id].name}
+                            onChange={setterInput(creature.id, "name")}
+                        />
+                    : creature.name}
+            </TableCellLayout>,
         }),
         createTableColumn<Creature>({
             columnId: ColId.HP,
@@ -108,47 +153,103 @@ export default function CreatureGrid({ data, deleteCreature }: Readonly<Props>) 
             renderCell: creature => {
                 const hp = creature.hp;
                 const [validationState, color, icon] = getProgressBarProps(hp);
-                return (
-                    <TableCellLayout content={{ className: classes.bar }}>
-                        <Field
-                            validationMessage={`${hp.current} / ${hp.max}`}
-                            validationState={validationState}
-                            validationMessageIcon={icon}
-                        >
-                            <ProgressBar value={hp.current} max={hp.max} color={color} thickness="large" />
-                        </Field>
-                    </TableCellLayout>
-                );
+                return isEditing(creature)
+                    ? <div className={classes.hpInputContainer}>
+                            <SpinButton
+                                className={classes.hpInput}
+                                step={1}
+                                value={editingIds[creature.id].hp.current}
+                                onChange={setterSpinButton(creature.id, "hp", "current")}
+                                placeholder="current"
+                            />
+                            <p className={classes.hpInputSeparator}>/</p>
+                            <SpinButton
+                                className={classes.hpInput}
+                                step={1}
+                                value={editingIds[creature.id].hp.max}
+                                onChange={setterSpinButton(creature.id, "hp", "max")}
+                                placeholder="max"
+                            />
+                        </div>
+                    : <TableCellLayout content={{ className: classes.bar }}>
+                            <Field
+                                validationMessage={`${hp.current} / ${hp.max}`}
+                                validationState={validationState}
+                                validationMessageIcon={icon}
+                            >
+                                <ProgressBar value={hp.current} max={hp.max} color={color} thickness="large" />
+                            </Field>
+                        </TableCellLayout>;
             },
         }),
         createTableColumn<Creature>({
             columnId: ColId.AC,
             renderHeaderCell: () => <Text title="AC">ac</Text>,
-            renderCell: creature => <TableCellLayout>{creature.ac.toString()}</TableCellLayout>,
+            renderCell: creature => <TableCellLayout>
+                {isEditing(creature)
+                    ? <SpinButton
+                            step={1}
+                            value={editingIds[creature.id].ac}
+                            onChange={setterSpinButton(creature.id, "ac")}
+                        />
+                    : creature.ac.toString()}
+            </TableCellLayout>,
         }),
         createTableColumn<Creature>({
             columnId: ColId.Actions,
-            renderCell: creature => <>
-                <div style={{ flexGrow: 1 }} />
-                <Menu>
-                    <MenuTrigger>
-                        <Button icon={<MoreVerticalFilled/>}/>
-                    </MenuTrigger>
-                    <MenuPopover>
-                        <MenuList>
-                            <MenuItem
-                                className={sharedClasses.danger}
-                                icon={<DeleteFilled className={sharedClasses.dangerHover} />}
-                                onClick={() => deleteCreature(creature)}
-                            >
-                                Delete
-                            </MenuItem>
-                        </MenuList>
-                    </MenuPopover>
-                </Menu>
-            </>,
+            renderHeaderCell: () => <Text />,
+            renderCell: creature => {
+                const button = isEditing(creature)
+                    ? <Button icon={<CheckmarkFilled/>} onClick={() => saveEditedCreature(creature)}/>
+                    : <Menu>
+                            <MenuTrigger>
+                                <Button icon={<MoreVerticalFilled/>}/>
+                            </MenuTrigger>
+                            <MenuPopover>
+                                <MenuList>
+                                    <MenuItem
+                                        icon={<EditRegular/>}
+                                        onClick={() => startEditingCreature(creature)}
+                                    >Edit</MenuItem>
+                                    <MenuItem
+                                        className={sharedClasses.danger}
+                                        icon={<DeleteFilled className={sharedClasses.dangerHover}/>}
+                                        onClick={() => editData.deleteCreature(creature)}
+                                    >Delete</MenuItem>
+                                </MenuList>
+                            </MenuPopover>
+                        </Menu>;
+                return <>
+                    <div style={{ flexGrow: 1 }}/>
+                    {button}
+                </>;
+            },
         }),
     ];
+
+    const initAcWidth = Object.keys(editingIds).length > 0 ? 64 : 20;
+    const colSizes: TableColumnSizingOptions = {
+        [ColId.Initiative]: {
+            minWidth: initAcWidth,
+            idealWidth: initAcWidth,
+        },
+        [ColId.Name]: {
+            autoFitColumns: true,
+            idealWidth: 250,
+        },
+        [ColId.HP]: {
+            minWidth: 100,
+            idealWidth: 300,
+        },
+        [ColId.AC]: {
+            minWidth: initAcWidth,
+            idealWidth: initAcWidth,
+        },
+        [ColId.Actions]: {
+            minWidth: 32,
+        },
+    };
+
     return (
         <DataGrid
             className={classes.table}
