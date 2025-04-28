@@ -25,8 +25,16 @@ import {
     TableColumnDefinition,
     TableColumnSizingOptions,
     Text,
+    tokens,
 } from "@fluentui/react-components";
-import { CheckmarkFilled, DeleteFilled, EditRegular, HeartOffRegular, MoreVerticalFilled } from "@fluentui/react-icons";
+import {
+    CheckmarkFilled,
+    DeleteFilled,
+    EditRegular,
+    HeartFilled,
+    HeartOffRegular,
+    MoreVerticalFilled,
+} from "@fluentui/react-icons";
 import { cloneWithout, createSetterInput, createSetterSpinButton, isValidCreature, sharedStyles } from "../util";
 import { useState } from "react";
 
@@ -41,17 +49,18 @@ enum ColId {
 type ValState = FieldProps["validationState"];
 type PBColor = ProgressBarProps["color"];
 type ValIcon = FieldProps["validationMessageIcon"];
-function getProgressBarProps(hp: Creature["hp"]): [validationState: ValState, color: PBColor, icon: ValIcon] {
+function getProgressBarProps(creature: Creature): [validationState: ValState, color: PBColor, icon: ValIcon] {
+    const hp = creature.hp;
     const hpFull = hp.current >= hp.max;
     const hpCritical = hp.current * 10 <= hp.max; // under 10%
     const dead = hp.current <= 0;
     if (hpFull)
         return ["success", "success", undefined];
     if (dead)
-        return ["error", "error", <HeartOffRegular key={null} />];
+        return ["error", "error", <HeartOffRegular key={`dead-${creature.id}`} />];
     if (hpCritical)
         return ["warning", "warning", undefined];
-    return ["none", "brand", undefined];
+    return ["none", "brand", <HeartFilled key={`alive-${creature.id}`} color={tokens.colorCompoundBrandBackground} />];
 }
 
 interface Props {
@@ -151,8 +160,8 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
             columnId: ColId.HP,
             renderHeaderCell: () => <Text title="HP">hp</Text>,
             renderCell: creature => {
+                const [validationState, color, icon] = getProgressBarProps(creature);
                 const hp = creature.hp;
-                const [validationState, color, icon] = getProgressBarProps(hp);
                 return isEditing(creature)
                     ? <div className={classes.hpInputContainer}>
                             <SpinButton
