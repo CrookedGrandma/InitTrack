@@ -30,6 +30,7 @@ import {
 import {
     CheckmarkFilled,
     DeleteFilled,
+    DismissFilled,
     EditRegular,
     HeartFilled,
     HeartOffRegular,
@@ -87,6 +88,10 @@ const useStyles = makeStyles({
     hpInputSeparator: {
         lineHeight: "32px",
     },
+    actionButtonContainer: {
+        display: "flex",
+        gap: "0.5rem",
+    },
 });
 const useSharedStyles = sharedStyles();
 
@@ -107,12 +112,15 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
             throw Error("Creature is not being edited");
         setEditingIds({ ...editingIds, [creature.id]: shouldClone ? { ...creature } : creature });
     }
-    function saveEditedCreature(creature: Creature) {
+    function stopEditingCreature(creature: Creature) {
         if (!isEditing(creature))
             throw Error("Creature was not being edited");
+        setEditingIds(cloneWithout(editingIds, creature.id));
+    }
+    function saveEditedCreature(creature: Creature) {
         const updated = editingIds[creature.id];
         editData.updateCreature(updated);
-        setEditingIds(cloneWithout(editingIds, creature.id));
+        stopEditingCreature(creature);
     }
 
     function setterInput(id: Guid, property: keyof Creature): InputProps["onChange"] {
@@ -209,7 +217,10 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
             renderHeaderCell: () => <Text />,
             renderCell: creature => {
                 const button = isEditing(creature)
-                    ? <Button icon={<CheckmarkFilled/>} onClick={() => saveEditedCreature(creature)}/>
+                    ? <div className={classes.actionButtonContainer}>
+                            <Button icon={<DismissFilled />} onClick={() => stopEditingCreature(creature)} />
+                            <Button icon={<CheckmarkFilled />} onClick={() => saveEditedCreature(creature)}/>
+                        </div>
                     : <Menu>
                             <MenuTrigger>
                                 <Button icon={<MoreVerticalFilled/>}/>
@@ -236,7 +247,10 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
         }),
     ];
 
-    const initAcWidth = Object.keys(editingIds).length > 0 ? 64 : 20;
+    const currentlyEditing = Object.keys(editingIds).length > 0;
+    const initAcBaseWidth = 20;
+    const initAcWidth = currentlyEditing ? 64 : initAcBaseWidth;
+    const nameWidth = 250 + initAcBaseWidth - initAcWidth;
     const colSizes: TableColumnSizingOptions = {
         [ColId.Initiative]: {
             minWidth: initAcWidth,
@@ -244,10 +258,10 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
         },
         [ColId.Name]: {
             autoFitColumns: true,
-            idealWidth: 250,
+            idealWidth: nameWidth,
         },
         [ColId.HP]: {
-            minWidth: 100,
+            minWidth: currentlyEditing ? 190 : 100,
             idealWidth: 300,
         },
         [ColId.AC]: {
@@ -255,7 +269,7 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
             idealWidth: initAcWidth,
         },
         [ColId.Actions]: {
-            minWidth: 32,
+            minWidth: currentlyEditing ? 72 : 32,
         },
     };
 
