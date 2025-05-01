@@ -1,3 +1,4 @@
+import { AddSquareRegular, DismissRegular } from "@fluentui/react-icons";
 import {
     Button,
     Divider,
@@ -10,7 +11,6 @@ import {
     tokens,
 } from "@fluentui/react-components";
 import { createSetterInput, createSetterSpinButton, emptyCreature, isValidCreature } from "../util";
-import { AddSquareRegular } from "@fluentui/react-icons";
 import { useState } from "react";
 
 interface Props {
@@ -54,22 +54,35 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
     const classes = useStyles();
 
     const [creature, setCreature] = useState<OptionalNull<Creature>>(emptyCreature());
-
     const [hasClicked, setHasClicked] = useState<boolean>(false);
 
-    function onClickAdd() {
+    function hasAnyFieldFilled() {
+        return creature.initiative != null
+            || creature.name != null
+            || creature.hp.current != null
+            || creature.hp.max != null
+            || creature.ac != null;
+    }
+
+    function addNewCreature() {
         if (isValidCreature(creature)) {
             addCreature(creature);
-            setCreature(emptyCreature());
-            setHasClicked(false);
+            clearCreature();
         }
         else {
             setHasClicked(true);
         }
     }
+    function clearCreature() {
+        setCreature(emptyCreature());
+        setHasClicked(false);
+    }
 
-    function requiredIfEmpty<T>(value: T | null) {
-        return hasClicked && value == null ? "required" : undefined;
+    function requiredIfEmpty<T>(value: T | null, short: boolean = false) {
+        if (!hasClicked || value != null)
+            return;
+
+        return short ? "req" : "required";
     }
 
     function setterInput(property: keyof Creature): InputProps["onChange"] {
@@ -81,6 +94,9 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
         return createSetterSpinButton([creature, setCreature], property, subProperty);
     }
 
+    const shouldShowClearBtn = hasClicked || hasAnyFieldFilled();
+    const growFactor = shouldShowClearBtn ? 2.5 : 1; // yes this is very ugly
+
     return (
         <div id="add-row" className={classes.row}>
             <Divider className={classes.divider}>add creature</Divider>
@@ -88,7 +104,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                 <Field
                     required
                     className={classes.field}
-                    validationMessage={requiredIfEmpty(creature.initiative)}
+                    validationMessage={requiredIfEmpty(creature.initiative, true)}
                 >
                     <SpinButton
                         className={classes.inputInitAc}
@@ -101,7 +117,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                 <Field
                     required
                     className={classes.field}
-                    style={{ flexGrow: 0.7 }}
+                    style={{ flexGrow: 0.7 * growFactor }}
                     validationMessage={requiredIfEmpty(creature.name)}
                 >
                     <Input
@@ -140,11 +156,11 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                         />
                     </Field>
                 </div>
-                <div style={{ flexGrow: 1.6 }} />
+                <div style={{ flexGrow: 1.6 * growFactor }} />
                 <Field
                     required
                     className={classes.field}
-                    validationMessage={requiredIfEmpty(creature.ac)}
+                    validationMessage={requiredIfEmpty(creature.ac, true)}
                 >
                     <SpinButton
                         className={classes.inputInitAc}
@@ -155,7 +171,9 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                     />
                 </Field>
                 <div style={{ flexGrow: 1 }} />
-                <Button className={classes.field} icon={<AddSquareRegular />} onClick={onClickAdd} />
+                {shouldShowClearBtn
+                    && <Button className={classes.field} icon={<DismissRegular />} onClick={clearCreature} />}
+                <Button className={classes.field} icon={<AddSquareRegular />} onClick={addNewCreature} />
             </div>
             <Divider className={classes.divider} />
         </div>
