@@ -65,7 +65,8 @@ function getProgressBarProps(creature: Creature): [validationState: ValState, co
 }
 
 interface Props {
-    data: Creature[];
+    creatures: Creature[];
+    activeCreature: Guid | undefined;
     editData: {
         deleteCreature: (creature: Creature) => void;
         updateCreature: (creature: Creature) => void;
@@ -92,10 +93,13 @@ const useStyles = makeStyles({
         display: "flex",
         gap: "0.5rem",
     },
+    active: {
+        backgroundColor: tokens.colorBrandBackground,
+    },
 });
 const useSharedStyles = sharedStyles();
 
-export default function CreatureGrid({ data, editData }: Readonly<Props>) {
+export default function CreatureGrid({ creatures, activeCreature, editData }: Readonly<Props>) {
     const classes = useStyles();
     const sharedClasses = useSharedStyles();
 
@@ -276,7 +280,7 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
     return (
         <DataGrid
             className={classes.table}
-            items={data}
+            items={creatures}
             columns={columns}
             sortable
             sortState={{ sortColumn: ColId.Initiative, sortDirection: "descending" }}
@@ -289,13 +293,16 @@ export default function CreatureGrid({ data, editData }: Readonly<Props>) {
                 </DataGridRow>
             </DataGridHeader>
             <DataGridBody<Creature>>
-                {row => (
-                    <DataGridRow<Creature> key={row.rowId}>
-                        {col => (
-                            <DataGridCell>{col.renderCell(row.item)}</DataGridCell>
-                        )}
-                    </DataGridRow>
-                )}
+                {row => {
+                    const className = row.item.id == activeCreature ? classes.active : "";
+                    return (
+                        <DataGridRow<Creature> key={row.rowId} className={className}>
+                            {col => (
+                                <DataGridCell>{col.renderCell(row.item)}</DataGridCell>
+                            )}
+                        </DataGridRow>
+                    );
+                }}
             </DataGridBody>
         </DataGrid>
     );

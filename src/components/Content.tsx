@@ -10,6 +10,7 @@ const useStyles = makeStyles({
     content: {
         display: "flex",
         flexDirection: "column",
+        gap: "2rem",
         alignItems: "start",
         width: "800px",
         maxWidth: "calc(90% - 4rem)",

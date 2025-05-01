@@ -13,6 +13,10 @@ export function cloneWithout<T extends AnyObject>(obj: T, key: keyof T): Omit<T,
     return (({ [key]: _, ...rest }) => rest)(obj);
 }
 
+export function cloneWithUpdated<T extends AnyObject, K extends keyof T>(obj: T, key: K, value: T[K]): T {
+    return { ...obj, [key]: value };
+}
+
 export function emptyCreature(): OptionalNull<Creature> {
     return {
         id: crypto.randomUUID(),
