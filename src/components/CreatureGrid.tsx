@@ -17,6 +17,7 @@ import {
     MenuList,
     MenuPopover,
     MenuTrigger,
+    mergeClasses,
     ProgressBar,
     ProgressBarProps,
     SpinButton,
@@ -174,8 +175,9 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
             renderCell: creature => {
                 const [validationState, color, icon] = getProgressBarProps(creature);
                 const hp = creature.hp;
+                const tempSuffix = hp.temp ? ` (+${hp.temp})` : "";
                 return isEditing(creature)
-                    ? <div className={classes.hpInputContainer}>
+                    ? <div className={mergeClasses(classes.hpInputContainer, classes.hpInputSeparator)}>
                             <SpinButton
                                 className={classes.hpInput}
                                 step={1}
@@ -183,7 +185,7 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
                                 onChange={setterSpinButton(creature.id, "hp", "current")}
                                 placeholder="current"
                             />
-                            <p className={classes.hpInputSeparator}>/</p>
+                            <p>/</p>
                             <SpinButton
                                 className={classes.hpInput}
                                 step={1}
@@ -191,10 +193,19 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
                                 onChange={setterSpinButton(creature.id, "hp", "max")}
                                 placeholder="max"
                             />
+                            <p>(+</p>
+                            <SpinButton
+                                className={classes.hpInput}
+                                step={1}
+                                value={editingIds[creature.id].hp.temp}
+                                onChange={setterSpinButton(creature.id, "hp", "temp")}
+                                placeholder="temp"
+                            />
+                            <p>)</p>
                         </div>
                     : <TableCellLayout content={{ className: classes.bar }}>
                             <Field
-                                validationMessage={`${hp.current} / ${hp.max}`}
+                                validationMessage={`${hp.current} / ${hp.max}${tempSuffix}`}
                                 validationState={validationState}
                                 validationMessageIcon={icon}
                             >
@@ -265,7 +276,7 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
             idealWidth: nameWidth,
         },
         [ColId.HP]: {
-            minWidth: currentlyEditing ? 190 : 100,
+            minWidth: currentlyEditing ? 300 : 100,
             idealWidth: 300,
         },
         [ColId.AC]: {

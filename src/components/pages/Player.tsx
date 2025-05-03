@@ -12,6 +12,7 @@ const tempData: Creature[] = [
         hp: {
             current: 10,
             max: 10,
+            temp: 2,
         },
         ac: 12,
     },
@@ -22,6 +23,7 @@ const tempData: Creature[] = [
         hp: {
             current: 10,
             max: 15,
+            temp: 3,
         },
         ac: 14,
     },
@@ -32,6 +34,7 @@ const tempData: Creature[] = [
         hp: {
             current: 2,
             max: 20,
+            temp: 0,
         },
         ac: 18,
     },
@@ -42,6 +45,7 @@ const tempData: Creature[] = [
         hp: {
             current: 0,
             max: 169,
+            temp: 0,
         },
         ac: 0,
     },

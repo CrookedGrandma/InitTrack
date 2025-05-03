@@ -25,6 +25,7 @@ export function emptyCreature(): OptionalNull<Creature> {
         hp: {
             current: null,
             max: null,
+            temp: null,
         },
         ac: null,
     };
@@ -35,6 +36,7 @@ export function isValidCreature(creature: OptionalNull<Creature>): creature is C
         && creature.name != null
         && creature.hp.current != null
         && creature.hp.max != null
+        && creature.hp.temp != null
         && creature.ac != null;
 }
 

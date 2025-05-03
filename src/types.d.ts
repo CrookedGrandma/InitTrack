@@ -19,6 +19,7 @@ interface Creature {
     hp: {
         current: number;
         max: number;
+        temp: number;
     };
     ac: number;
 }

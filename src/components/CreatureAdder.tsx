@@ -6,6 +6,7 @@ import {
     Input,
     InputProps,
     makeStyles,
+    mergeClasses,
     SpinButton,
     SpinButtonProps,
     tokens,
@@ -93,7 +94,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
     }
 
     const shouldShowClearBtn = hasClicked || hasAnyFieldFilled();
-    const growFactor = shouldShowClearBtn ? 2.5 : 1; // yes this is very ugly
+    const growFactor = shouldShowClearBtn ? 3 : 1; // yes this is very ugly
 
     return (
         <div id="add-row" className={classes.row}>
@@ -123,7 +124,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                         placeholder="name"
                     />
                 </Field>
-                <div className={classes.fieldHpContainer}>
+                <div className={mergeClasses(classes.fieldHpContainer, classes.fieldHpSeparator)}>
                     <Field
                         required
                         validationMessage={requiredIfEmpty(creature.hp.current)}
@@ -136,7 +137,7 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                             placeholder="cur hp"
                         />
                     </Field>
-                    <p className={classes.fieldHpSeparator}>/</p>
+                    <p>/</p>
                     <Field
                         required
                         validationMessage={requiredIfEmpty(creature.hp.max)}
@@ -149,8 +150,22 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                             placeholder="max hp"
                         />
                     </Field>
+                    <p>(+</p>
+                    <Field
+                        required
+                        validationMessage={requiredIfEmpty(creature.hp.temp)}
+                    >
+                        <SpinButton
+                            className={classes.inputHp}
+                            step={1} precision={1}
+                            value={creature.hp.temp}
+                            onChange={setterSpinButton("hp", "temp")}
+                            placeholder="temp hp"
+                        />
+                    </Field>
+                    <p>)</p>
                 </div>
-                <div style={{ flexGrow: 1.6 * growFactor }} />
+                <div style={{ flexGrow: 0.1 * growFactor }} />
                 <Field
                     required
                     validationMessage={requiredIfEmpty(creature.ac, true)}
