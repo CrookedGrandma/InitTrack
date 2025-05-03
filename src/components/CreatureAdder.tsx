@@ -29,9 +29,7 @@ const useStyles = makeStyles({
         width: "calc(100% - 1rem)",
         gap: "0.5rem",
         padding: "0 0.5rem",
-    },
-    field: {
-        height: "fit-content",
+        alignItems: "start",
     },
     inputInitAc: {
         width: "3rem",
@@ -103,7 +101,6 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
             <div id="add-row-fields" className={classes.fieldsContainer}>
                 <Field
                     required
-                    className={classes.field}
                     validationMessage={requiredIfEmpty(creature.initiative, true)}
                 >
                     <SpinButton
@@ -116,7 +113,6 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                 </Field>
                 <Field
                     required
-                    className={classes.field}
                     style={{ flexGrow: 0.7 * growFactor }}
                     validationMessage={requiredIfEmpty(creature.name)}
                 >
@@ -130,7 +126,6 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                 <div className={classes.fieldHpContainer}>
                     <Field
                         required
-                        className={classes.field}
                         validationMessage={requiredIfEmpty(creature.hp.current)}
                     >
                         <SpinButton
@@ -144,7 +139,6 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                     <p className={classes.fieldHpSeparator}>/</p>
                     <Field
                         required
-                        className={classes.field}
                         validationMessage={requiredIfEmpty(creature.hp.max)}
                     >
                         <SpinButton
@@ -159,7 +153,6 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                 <div style={{ flexGrow: 1.6 * growFactor }} />
                 <Field
                     required
-                    className={classes.field}
                     validationMessage={requiredIfEmpty(creature.ac, true)}
                 >
                     <SpinButton
@@ -171,9 +164,8 @@ export default function CreatureAdder({ addCreature }: Readonly<Props>) {
                     />
                 </Field>
                 <div style={{ flexGrow: 1 }} />
-                {shouldShowClearBtn
-                    && <Button className={classes.field} icon={<DismissRegular />} onClick={clearCreature} />}
-                <Button className={classes.field} icon={<AddSquareRegular />} onClick={addNewCreature} />
+                {shouldShowClearBtn && <Button icon={<DismissRegular />} onClick={clearCreature} />}
+                <Button icon={<AddSquareRegular />} onClick={addNewCreature} />
             </div>
             <Divider className={classes.divider} />
         </div>
