@@ -23,3 +23,8 @@ interface Creature {
     };
     ac: number;
 }
+
+interface DamageType {
+    name: string;
+    icon: ReactElement;
+}

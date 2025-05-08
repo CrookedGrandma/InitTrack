@@ -2,7 +2,8 @@ import { Button, Divider, makeStyles, Text, Title2, tokens } from "@fluentui/rea
 import { cloneWithUpdated, sharedStyles } from "../util";
 import { Dispatch, useMemo } from "react";
 import { FastForwardRegular, PlayRegular, StopRegular } from "@fluentui/react-icons";
-import { LuShieldPlus, LuSwords, LuWand } from "react-icons/lu";
+import { LuShieldPlus, LuWand } from "react-icons/lu";
+import DamageDialog from "./dialogs/DamageDialog";
 
 export interface PlayerState {
     isPlaying: boolean;
@@ -86,8 +87,9 @@ export default function PlayerControls({ creatures, state: { state, setState } }
     }
     const stopButton = <Button icon={<StopRegular />} onClick={stopPlaying} />;
 
-    function clickDamage() {
-        alert("Damage is coming soon!");
+    function addDamage(damage: number, type: DamageType, to: Creature[]) {
+        // This is obviously a placeholder
+        alert(`Doing ${damage} ${type.name} damage to ${to.map(c => c.name).join(", ")}!`);
     }
 
     function clickHeal() {
@@ -129,9 +131,9 @@ export default function PlayerControls({ creatures, state: { state, setState } }
                         <fieldset className={classes.fieldset}>
                             <legend>Controls</legend>
                             <div className={classes.buttonGroup}>
-                                <Button disabled onClick={clickDamage} icon={<LuSwords />}>Damage</Button>
+                                <DamageDialog creatures={creatures} processDamage={addDamage} />
                                 <Button disabled onClick={clickHeal} icon={<LuShieldPlus />}>Heal</Button>
-                                <Button disabled onClick={clickApplyStatus} icon={<LuWand />}>Apply status</Button>
+                                <Button disabled onClick={clickApplyStatus} icon={<LuWand />}>Apply status</Button> {/* use TagPicker for this */}
                             </div>
                             <Button onClick={clickEndTurn} icon={<FastForwardRegular />}>End turn</Button>
                         </fieldset>

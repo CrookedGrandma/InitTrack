@@ -40,6 +40,10 @@ export function isValidCreature(creature: OptionalNull<Creature>): creature is C
         && creature.ac != null;
 }
 
+export function sortByName(creatures: Creature[]): Creature[] {
+    return creatures.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function sharedStyles() {
     return makeStyles({
         danger: {
@@ -56,11 +60,17 @@ export function sharedStyles() {
     });
 }
 
+export function getSpinButtonValue(data: SpinButtonOnChangeData): number | null {
+    let value: number | null = data.value ?? parseFloat(data.displayValue as string);
+    if (Number.isNaN(value))
+        value = null;
+    return value;
+}
+
 export function createSetterInput(
     [creature, setCreature]: [OptionalNull<Creature>, Dispatch<OptionalNull<Creature>>],
     property: keyof Creature): InputProps["onChange"] {
     return (_: any, data: InputOnChangeData) => {
-        console.log(data);
         if (!creature)
             throw Error("No creature is set");
         setCreature({ ...creature, [property]: data.value });
@@ -72,12 +82,9 @@ export function createSetterSpinButton<K extends keyof Creature>(
     property: K,
     subProperty?: keyof Creature[K]): SpinButtonProps["onChange"] {
     return (_: any, data: SpinButtonOnChangeData) => {
-        console.log(data);
         if (!creature)
             throw Error("No creature is set");
-        let value: number | null = data.value ?? parseFloat(data.displayValue as string);
-        if (Number.isNaN(value))
-            value = null;
+        const value = getSpinButtonValue(data);
         const propertyValue = subProperty
             ? { ...creature[property] as AnyObject, [subProperty]: value }
             : value;
