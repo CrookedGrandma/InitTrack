@@ -24,7 +24,37 @@ interface Creature {
     ac: number;
 }
 
+type CreatureReference = Pick<Creature, "id" | "name">;
+
+type CreatureEffect = { target: CreatureReference } & Partial<Pick<Creature, "hp" | "ac">>;
+
 interface DamageType {
     name: string;
     icon: ReactElement;
+}
+
+interface ActionBase {
+    readonly id: Guid;
+    type: "damage" | "heal";
+    source: CreatureReference;
+    targets: CreatureReference[];
+}
+
+interface DamageAction extends ActionBase {
+    type: "damage";
+    damageType: DamageType;
+    amount: number;
+}
+
+interface HealAction extends ActionBase {
+    type: "heal";
+    healType: "normal" | "temp";
+    amount: number;
+}
+
+type Action = DamageAction | HealAction;
+
+interface HistoryItem {
+    actions: Action[];
+    effect: CreatureEffect;
 }

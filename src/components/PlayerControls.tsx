@@ -1,19 +1,23 @@
-import { Button, Divider, makeStyles, Text, Title2, tokens } from "@fluentui/react-components";
-import { cloneWithUpdated, sharedStyles } from "../util";
+import { actionsByCreature, applyActions } from "../actions";
+import { Button, Divider, makeStyles, mergeClasses, Text, Title2, tokens } from "@fluentui/react-components";
+import { cloneWithUpdated, getDiff, sharedStyles, sortByName } from "../util";
 import { Dispatch, useMemo } from "react";
 import { FastForwardRegular, PlayRegular, StopRegular } from "@fluentui/react-icons";
 import { LuShieldPlus, LuWand } from "react-icons/lu";
 import DamageDialog from "./dialogs/DamageDialog";
+import PendingAction from "./PendingAction";
 
 export interface PlayerState {
     isPlaying: boolean;
     activeCreatureId: Guid | undefined;
+    pendingActions: Action[];
 }
 
 export function defaultPlayerState(): PlayerState {
     return {
         isPlaying: false,
         activeCreatureId: undefined,
+        pendingActions: [],
     };
 }
 
@@ -23,6 +27,7 @@ interface Props {
         state: PlayerState;
         setState: Dispatch<PlayerState>;
     };
+    applyHistory: (items: HistoryItem[]) => void;
 }
 
 const useStyles = makeStyles({
@@ -32,6 +37,7 @@ const useStyles = makeStyles({
     controlContainer: {
         display: "flex",
         flexDirection: "column",
+        gap: "0.5rem",
     },
     header: {
         display: "flex",
@@ -44,9 +50,16 @@ const useStyles = makeStyles({
         border: `1px solid ${tokens.colorNeutralStroke2}`,
         borderRadius: tokens.borderRadiusLarge,
         padding: "0.5rem",
+    },
+    controlButtons: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "start",
+    },
+    effectsSection: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
     },
     buttonGroup: {
         display: "flex",
@@ -56,7 +69,7 @@ const useStyles = makeStyles({
 });
 const useSharedClasses = sharedStyles();
 
-export default function PlayerControls({ creatures, state: { state, setState } }: Readonly<Props>) {
+export default function PlayerControls({ creatures, state: { state, setState }, applyHistory }: Readonly<Props>) {
     const classes = useStyles();
     const sharedClasses = useSharedClasses();
 
@@ -68,6 +81,15 @@ export default function PlayerControls({ creatures, state: { state, setState } }
             activeIndex >= 0 ? initiativeOrder[activeIndex] : undefined,
         ];
     }, [initiativeOrder, state.activeCreatureId]);
+
+    const creatureMap = useMemo(() => Object.fromEntries(creatures.map(c => [c.id, c])), [creatures]);
+
+    const groupedActions = useMemo(() => actionsByCreature(state.pendingActions), [state.pendingActions]);
+
+    const resultingCreatures = useMemo(() => {
+        const sortedTargets = sortByName(Object.keys(groupedActions).map(id => creatureMap[id]));
+        return sortedTargets.map(t => applyActions(t, groupedActions[t.id]));
+    }, [groupedActions, creatureMap]);
 
     function startPlaying() {
         if (creatures.length === 0) {
@@ -87,9 +109,8 @@ export default function PlayerControls({ creatures, state: { state, setState } }
     }
     const stopButton = <Button icon={<StopRegular />} onClick={stopPlaying} />;
 
-    function addDamage(damage: number, type: DamageType, to: Creature[]) {
-        // This is obviously a placeholder
-        alert(`Doing ${damage} ${type.name} damage to ${to.map(c => c.name).join(", ")}!`);
+    function addDamage(damage: DamageAction) {
+        setState(cloneWithUpdated(state, "pendingActions", [...state.pendingActions, damage]));
     }
 
     function clickHeal() {
@@ -105,7 +126,23 @@ export default function PlayerControls({ creatures, state: { state, setState } }
         if (nextIndex >= initiativeOrder.length)
             nextIndex = 0;
         const nextCreature = initiativeOrder[nextIndex];
-        setState(cloneWithUpdated(state, "activeCreatureId", nextCreature.id));
+        let newState = cloneWithUpdated(state, "activeCreatureId", nextCreature.id);
+
+        if (resultingCreatures.length > 0) {
+            const newHistory = resultingCreatures.map(result => ({
+                actions: groupedActions[result.id],
+                effect: getDiff(creatureMap[result.id], result),
+            }));
+            applyHistory(newHistory);
+        }
+        newState = cloneWithUpdated(newState, "pendingActions", []);
+
+        setState(newState);
+    }
+
+    function removeHistoryItem(item: Action) {
+        const newHistory = state.pendingActions.filter(h => h !== item);
+        setState(cloneWithUpdated(state, "pendingActions", newHistory));
     }
 
     return (
@@ -123,20 +160,52 @@ export default function PlayerControls({ creatures, state: { state, setState } }
                             {stopButton}
                         </>;
                     }
-                    return <>
+                    const header = (
                         <div className={classes.header}>
                             <Title2>{activeCreature.name}&#39;s turn</Title2>
                             {stopButton}
                         </div>
-                        <fieldset className={classes.fieldset}>
+                    );
+                    const controls = (
+                        <fieldset className={mergeClasses(classes.fieldset, classes.controlButtons)}>
                             <legend>Controls</legend>
                             <div className={classes.buttonGroup}>
-                                <DamageDialog creatures={creatures} processDamage={addDamage} />
+                                <DamageDialog
+                                    activeCreature={activeCreature}
+                                    creatures={creatures}
+                                    processDamage={addDamage}
+                                />
                                 <Button disabled onClick={clickHeal} icon={<LuShieldPlus />}>Heal</Button>
                                 <Button disabled onClick={clickApplyStatus} icon={<LuWand />}>Apply status</Button> {/* use TagPicker for this */}
                             </div>
                             <Button onClick={clickEndTurn} icon={<FastForwardRegular />}>End turn</Button>
                         </fieldset>
+                    );
+                    let effects = undefined;
+                    if (state.pendingActions.length > 0) {
+                        effects = (
+                            <fieldset className={mergeClasses(classes.fieldset, classes.effectsSection)}>
+                                <legend>Effects</legend>
+                                {state.pendingActions.map(a =>
+                                    <PendingAction key={a.id} action={a} removeAction={removeHistoryItem} />)}
+                                <Divider />
+                                <div>
+                                    <Text>Targeted creatures after this turn:</Text>
+                                    <ul>
+                                        {resultingCreatures.map(c => (
+                                            <Text key={c.id}><li>
+                                                {c.name} (AC {c.ac}): {c.hp.current} / {c.hp.max} (+{c.hp.temp})
+                                            </li></Text>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </fieldset>
+                        );
+                    }
+                    return <>
+                        {header}
+                        {controls}
+                        {effects}
                     </>;
                 })()}
             </div>

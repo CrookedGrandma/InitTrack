@@ -1,3 +1,4 @@
+import { applyEffect, findCreature } from "../../util";
 import { makeStyles, Title1 } from "@fluentui/react-components";
 import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
 import CreatureAdder from "../CreatureAdder";
@@ -60,21 +61,40 @@ const useStyles = makeStyles({
 export default function Player() {
     const classes = useStyles();
 
-    const [data, setData] = useState<Creature[]>(tempData);
+    const [creatures, setCreatures] = useState<Creature[]>(tempData);
     const [playerState, setPlayerState] = useState<PlayerState>(defaultPlayerState());
+    const [history, setHistory] = useState<HistoryItem[]>([]);
+
+    function updateCreatures(updated: Creature[]) {
+        setCreatures(creatures.map(c => updated.find(u => u.id === c.id) ?? c));
+    }
 
     const editData = {
-        addCreature: (creature: Creature) => setData([...data, creature]),
-        deleteCreature: (creature: Creature) => setData(data.filter(c => c.id !== creature.id)),
-        updateCreature: (creature: Creature) => setData(data.map(c => c.id === creature.id ? creature : c)),
+        addCreature: (creature: Creature) => setCreatures([...creatures, creature]),
+        deleteCreature: (creature: Creature) => setCreatures(creatures.filter(c => c.id !== creature.id)),
+        updateCreature: (creature: Creature) => updateCreatures([creature]),
     };
+
+    function applyHistory(items: HistoryItem[]) {
+        setHistory([...history, ...items]);
+        const updated = items.map(item => {
+            const effect = item.effect;
+            const target = findCreature(creatures, effect.target);
+            return applyEffect(target, effect);
+        });
+        updateCreatures(updated);
+    }
 
     return <>
         <Title1>Playing</Title1>
         <div id="table-container" className={classes.container}>
-            <CreatureGrid creatures={data} activeCreature={playerState.activeCreatureId} editData={editData} />
+            <CreatureGrid creatures={creatures} activeCreature={playerState.activeCreatureId} editData={editData} />
         </div>
         <CreatureAdder addCreature={editData.addCreature} />
-        <PlayerControls creatures={data} state={{ state: playerState, setState: setPlayerState }} />
+        <PlayerControls
+            creatures={creatures}
+            state={{ state: playerState, setState: setPlayerState }}
+            applyHistory={applyHistory}
+        />
     </>;
 }

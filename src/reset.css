@@ -31,7 +31,7 @@ body {
     line-height: 1;
 }
 ol, ul {
-    list-style: none;
+    padding: revert; /* restore indent to list items */
 }
 blockquote, q {
     quotes: none;

@@ -6,6 +6,7 @@ import ThemeButton from "./components/ThemeButton";
 
 const useStyles = makeStyles({
     app: {
+        flexGrow: 1,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",

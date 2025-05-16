@@ -16,7 +16,7 @@ const useStyles = makeStyles({
         maxWidth: "calc(90% - 4rem)",
         borderLeft: `1px solid ${tokens.colorNeutralStroke1}`,
         borderRight: `1px solid ${tokens.colorNeutralStroke1}`,
-        padding: "2rem 2rem 0",
+        padding: "2rem",
         flexGrow: 1,
     },
 });

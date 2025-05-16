@@ -22,8 +22,9 @@ import { LuSwords } from "react-icons/lu";
 import { useState } from "react";
 
 interface Props {
+    activeCreature: CreatureReference;
     creatures: Creature[];
-    processDamage: (damage: number, type: DamageType, to: Creature[]) => void;
+    processDamage: (damage: DamageAction) => void;
 }
 
 const useStyles = makeStyles({
@@ -54,7 +55,7 @@ const useStyles = makeStyles({
     },
 });
 
-export default function DamageDialog({ creatures, processDamage }: Readonly<Props>) {
+export default function DamageDialog({ activeCreature, creatures, processDamage }: Readonly<Props>) {
     const [damage, setDamage] = useState<number | null>(null);
     const [selectedTypes, setSelectedTypes] = useState<SelectionItemId[]>([]);
     const [selectedCreatures, setSelectedCreatures] = useState<SelectionItemId[]>([]);
@@ -70,7 +71,15 @@ export default function DamageDialog({ creatures, processDamage }: Readonly<Prop
         const to = creatures.filter(c => selectedCreatures.includes(c.id));
         if (to.length === 0)
             throw Error("No creatures were selected");
-        processDamage(damage, type, to);
+        const effect: DamageAction = {
+            id: crypto.randomUUID(),
+            type: "damage",
+            source: activeCreature,
+            targets: to,
+            damageType: type,
+            amount: damage,
+        };
+        processDamage(effect);
         clear();
     }
 
