@@ -3,8 +3,9 @@ import { Button, Divider, makeStyles, mergeClasses, Text, Title2, tokens } from 
 import { cloneWithUpdated, getDiff, sharedStyles, sortByName } from "../util";
 import { Dispatch, useMemo } from "react";
 import { FastForwardRegular, PlayRegular, StopRegular } from "@fluentui/react-icons";
-import { LuShieldPlus, LuWand } from "react-icons/lu";
 import DamageDialog from "./dialogs/DamageDialog";
+import HealDialog from "./dialogs/HealDialog";
+import { LuWand } from "react-icons/lu";
 import PendingAction from "./PendingAction";
 
 export interface PlayerState {
@@ -109,12 +110,12 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
     }
     const stopButton = <Button icon={<StopRegular />} onClick={stopPlaying} />;
 
-    function addDamage(damage: DamageAction) {
+    function addDamage(damage: ActionType<"damage">) {
         setState(cloneWithUpdated(state, "pendingActions", [...state.pendingActions, damage]));
     }
 
-    function clickHeal() {
-        alert("Healing is coming soon!");
+    function addHeal(heal: ActionType<"heal">) {
+        setState(cloneWithUpdated(state, "pendingActions", [...state.pendingActions, heal]));
     }
 
     function clickApplyStatus() {
@@ -145,69 +146,74 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
         setState(cloneWithUpdated(state, "pendingActions", newHistory));
     }
 
+    let header, controls, effects;
+
+    if (!state.isPlaying) {
+        controls = <Button icon={<PlayRegular/>} onClick={startPlaying}/>;
+    }
+    else if (!activeCreature) {
+        controls = <>
+            <Text className={sharedClasses.danger}>
+                Could not find creature with ID {state.activeCreatureId}
+            </Text>
+            {stopButton}
+        </>;
+    }
+    else {
+        header = (
+            <div className={classes.header}>
+                <Title2>{activeCreature.name}&#39;s turn</Title2>
+                {stopButton}
+            </div>
+        );
+        controls = (
+            <fieldset className={mergeClasses(classes.fieldset, classes.controlButtons)}>
+                <legend>Controls</legend>
+                <div className={classes.buttonGroup}>
+                    <DamageDialog
+                        activeCreature={activeCreature}
+                        creatures={creatures}
+                        processDamage={addDamage}
+                    />
+                    <HealDialog
+                        activeCreature={activeCreature}
+                        creatures={creatures}
+                        processHeal={addHeal}
+                    />
+                    <Button disabled onClick={clickApplyStatus} icon={<LuWand />}>Apply status</Button> {/* use TagPicker for this */}
+                </div>
+                <Button onClick={clickEndTurn} icon={<FastForwardRegular />}>End turn</Button>
+            </fieldset>
+        );
+        if (state.pendingActions.length > 0) {
+            effects = (
+                <fieldset className={mergeClasses(classes.fieldset, classes.effectsSection)}>
+                    <legend>Effects</legend>
+                    {state.pendingActions.map(a =>
+                        <PendingAction key={a.id} action={a} removeAction={removeHistoryItem} />)}
+                    <Divider />
+                    <div>
+                        <Text>Targeted creatures after this turn:</Text>
+                        <ul>
+                            {resultingCreatures.map(c => (
+                                <Text key={c.id}><li>
+                                    {c.name} (AC {c.ac}): {c.hp.current} / {c.hp.max} (+{c.hp.temp})
+                                </li></Text>
+                            ))}
+                        </ul>
+                    </div>
+                </fieldset>
+            );
+        }
+    }
+
     return (
         <div className={classes.controlArea}>
             <Divider>controls</Divider>
             <div className={classes.controlContainer}>
-                {(() => {
-                    if (!state.isPlaying)
-                        return <Button icon={<PlayRegular />} onClick={startPlaying} />;
-                    if (!activeCreature) {
-                        return <>
-                            <Text className={sharedClasses.danger}>
-                                Could not find creature with ID {state.activeCreatureId}
-                            </Text>
-                            {stopButton}
-                        </>;
-                    }
-                    const header = (
-                        <div className={classes.header}>
-                            <Title2>{activeCreature.name}&#39;s turn</Title2>
-                            {stopButton}
-                        </div>
-                    );
-                    const controls = (
-                        <fieldset className={mergeClasses(classes.fieldset, classes.controlButtons)}>
-                            <legend>Controls</legend>
-                            <div className={classes.buttonGroup}>
-                                <DamageDialog
-                                    activeCreature={activeCreature}
-                                    creatures={creatures}
-                                    processDamage={addDamage}
-                                />
-                                <Button disabled onClick={clickHeal} icon={<LuShieldPlus />}>Heal</Button>
-                                <Button disabled onClick={clickApplyStatus} icon={<LuWand />}>Apply status</Button> {/* use TagPicker for this */}
-                            </div>
-                            <Button onClick={clickEndTurn} icon={<FastForwardRegular />}>End turn</Button>
-                        </fieldset>
-                    );
-                    let effects = undefined;
-                    if (state.pendingActions.length > 0) {
-                        effects = (
-                            <fieldset className={mergeClasses(classes.fieldset, classes.effectsSection)}>
-                                <legend>Effects</legend>
-                                {state.pendingActions.map(a =>
-                                    <PendingAction key={a.id} action={a} removeAction={removeHistoryItem} />)}
-                                <Divider />
-                                <div>
-                                    <Text>Targeted creatures after this turn:</Text>
-                                    <ul>
-                                        {resultingCreatures.map(c => (
-                                            <Text key={c.id}><li>
-                                                {c.name} (AC {c.ac}): {c.hp.current} / {c.hp.max} (+{c.hp.temp})
-                                            </li></Text>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </fieldset>
-                        );
-                    }
-                    return <>
-                        {header}
-                        {controls}
-                        {effects}
-                    </>;
-                })()}
+                {header}
+                {controls}
+                {effects}
             </div>
         </div>
     );

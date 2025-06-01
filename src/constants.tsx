@@ -3,6 +3,8 @@ import {
     GiChewedSkull,
     GiFire,
     GiFlatHammer,
+    GiHealthIncrease,
+    GiHealthNormal,
     GiHolyHandGrenade,
     GiKnifeThrust,
     GiPoisonBottle,
@@ -14,7 +16,7 @@ import {
     GiWindyStripes,
 } from "react-icons/gi";
 
-export const damageTypes: DamageType[] = [
+export const damageTypes: NameIcon[] = [
     { name: "Bludgeoning", icon: <GiFlatHammer /> },
     { name: "Piercing", icon: <GiKnifeThrust /> },
     { name: "Slashing", icon: <GiSpinningSword /> },
@@ -28,4 +30,9 @@ export const damageTypes: DamageType[] = [
     { name: "Psychic", icon: <GiPsychicWaves /> },
     { name: "Radiant", icon: <GiHolyHandGrenade /> },
     { name: "Thunder", icon: <GiRollingEnergy /> },
+];
+
+export const healTypes: HealType[] = [
+    { type: "normal", name: "Permanent", icon: <GiHealthNormal /> },
+    { type: "temp", name: "Temporary", icon: <GiHealthIncrease /> },
 ];

@@ -1,76 +1,69 @@
 import { Field, List, ListItem, makeStyles, Persona, SelectionItemId } from "@fluentui/react-components";
 import ActionDialog from "./ActionDialog";
-import { damageTypes } from "../../constants";
+import { healTypes } from "../../constants";
 import IntField from "../IntField";
-import { LuSwords } from "react-icons/lu";
+import { LuShieldPlus } from "react-icons/lu";
 import { useState } from "react";
 
 interface Props {
     activeCreature: CreatureReference;
     creatures: Creature[];
-    processDamage: (damage: ActionType<"damage">) => void;
+    processHeal: (heal: ActionType<"heal">) => void;
 }
 
 const useStyles = makeStyles({
-    damageTypeList: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gridAutoFlow: "column",
+    healTypeList: {
+        display: "flex",
+        flexDirection: "column",
         gap: "0.25rem",
-        ["&>li:nth-child(-n+3)"]: {
-            gridColumn: 1,
-        },
-        ["&>li:nth-child(n+4)"]: {
-            gridColumn: 2,
-        },
     },
 });
 
-export default function DamageDialog({ activeCreature, creatures, processDamage }: Readonly<Props>) {
-    const [damage, setDamage] = useState<number | null>(null);
+export default function HealDialog({ activeCreature, creatures, processHeal }: Readonly<Props>) {
+    const [amount, setAmount] = useState<number | null>(null);
     const [selectedTypes, setSelectedTypes] = useState<SelectionItemId[]>([]);
 
     const classes = useStyles();
 
-    function createAction(targets: CreatureReference[]): ActionType<"damage"> {
-        if (!damage)
-            throw Error("Damage was not set correctly");
-        const type = damageTypes.find(t => selectedTypes[0] == t.name);
+    function createAction(targets: CreatureReference[]): ActionType<"heal"> {
+        if (!amount)
+            throw Error("Amount was not set correctly");
+        const type = healTypes.find(t => selectedTypes[0] == t.type);
         if (!type)
-            throw Error("Damage type was not set correctly");
+            throw Error("Heal type was not set correctly");
         return {
             id: crypto.randomUUID(),
-            type: "damage",
+            type: "heal",
             source: activeCreature,
             targets: targets,
-            damageType: type,
-            amount: damage,
+            healType: type,
+            amount: amount,
         };
     }
 
     function clear() {
-        setDamage(null);
+        setAmount(null);
         setSelectedTypes([]);
     }
 
     return (
         <ActionDialog
             creatures={creatures}
-            triggerLabel="Damage"
-            triggerIcon={<LuSwords />}
-            dialogTitle="Do damage"
-            targetSelectLabel="To whom?"
+            triggerLabel="Heal"
+            triggerIcon={<LuShieldPlus />}
+            dialogTitle="Heal"
+            targetSelectLabel="Whom?"
             additionalFields={<>
-                <IntField label="How much?" value={damage} setValue={setDamage} />
+                <IntField label="How much?" value={amount} setValue={setAmount} />
                 <Field label="What type?">
                     <List
-                        className={classes.damageTypeList}
+                        className={classes.healTypeList}
                         selectionMode="single"
                         selectedItems={selectedTypes}
                         onSelectionChange={(_, data) => setSelectedTypes(data.selectedItems)}
                     >
-                        {damageTypes.map(t => (
-                            <ListItem key={t.name} value={t.name}>
+                        {healTypes.map(t => (
+                            <ListItem key={t.type} value={t.type}>
                                 <Persona
                                     name={t.name}
                                     avatar={{ name: undefined, icon: t.icon }}
@@ -83,9 +76,9 @@ export default function DamageDialog({ activeCreature, creatures, processDamage 
                 </Field>
             </>}
             clearAdditionalFields={clear}
-            validateAdditionalFields={() => !!damage && selectedTypes.length > 0}
+            validateAdditionalFields={() => !!amount && selectedTypes.length > 0}
             createAction={createAction}
-            processAction={processDamage}
+            processAction={processHeal}
         />
     );
 }

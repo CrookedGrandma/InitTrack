@@ -7,26 +7,49 @@ interface Props {
     removeAction: (action: Action) => void;
 }
 
+function damageHeader(action: ActionType<"damage">) {
+    const type = action.damageType;
+    const avatar = <Avatar icon={type.icon} size={24} />;
+
+    if (action.targets.length === 1) {
+        return <Text>{action.amount} {avatar} {type.name} damage to {action.targets[0].name}</Text>;
+    }
+
+    return <Text>{action.amount} {avatar} {type.name} damage to</Text>;
+}
+
+function healHeader(action: ActionType<"heal">) {
+    const type = action.healType;
+    const avatar = <Avatar icon={type.icon} size={24} />;
+
+    if (type.type === "normal") {
+        return action.targets.length === 1
+            ? <Text>{avatar} Healing {action.targets[0].name} for {action.amount} HP</Text>
+            : <Text>{avatar} Healing for {action.amount} HP:</Text>;
+    }
+    if (type.type === "temp") {
+        return action.targets.length === 1
+            ? <Text>Giving {action.amount} {avatar} temporary HP to {action.targets[0].name}</Text>
+            : <Text>Giving {action.amount} {avatar} temporary HP to</Text>;
+    }
+}
+
 export default function PendingAction({ action, removeAction }: Readonly<Props>) {
     let header: ReactNode = undefined;
     let description: ReactNode = undefined;
 
-    if (action.type === "damage") {
-        const type = action.damageType;
-        const avatar = <Avatar icon={type.icon} size={24} />;
-
-        if (action.targets.length === 1) {
-            header = <Text>{action.amount} {avatar} {type.name} damage to {action.targets[0].name}</Text>;
-        }
-        else {
-            header = <Text>{action.amount} {avatar} {type.name} damage to</Text>;
-            description = (
-                <ul>
-                    {action.targets.map(t => <Caption1 key={t.id}><li>{t.name}</li></Caption1>)}
-                </ul>
-            );
-        }
+    if (action.targets.length > 1) {
+        description = (
+            <ul>
+                {action.targets.map(t => <Caption1 key={t.id}><li>{t.name}</li></Caption1>)}
+            </ul>
+        );
     }
+
+    if (action.type === "damage")
+        header = damageHeader(action);
+    if (action.type === "heal")
+        header = healHeader(action);
 
     return (
         <Card onClick={() => {}}>

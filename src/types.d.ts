@@ -1,5 +1,6 @@
 type AnyObject = { [key: string]: any };
 type AnyFunction = (...args: any[]) => any;
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
 type Guid = ReturnType<typeof crypto.randomUUID>;
 
 // Recursively makes all properties of the given type accept null as a value
@@ -28,31 +29,35 @@ type CreatureReference = Pick<Creature, "id" | "name">;
 
 type CreatureEffect = { target: CreatureReference } & Partial<Pick<Creature, "hp" | "ac">>;
 
-interface DamageType {
+interface NameIcon {
     name: string;
     icon: ReactElement;
 }
 
+type HealType = { type: "normal" | "temp" } & NameIcon;
+
 interface ActionBase {
     readonly id: Guid;
-    type: "damage" | "heal";
     source: CreatureReference;
     targets: CreatureReference[];
 }
 
-interface DamageAction extends ActionBase {
-    type: "damage";
-    damageType: DamageType;
-    amount: number;
+interface ActionMap {
+    damage: {
+        damageType: NameIcon;
+        amount: number;
+    };
+    heal: {
+        healType: HealType;
+        amount: number;
+    };
 }
 
-interface HealAction extends ActionBase {
-    type: "heal";
-    healType: "normal" | "temp";
-    amount: number;
-}
+type Action = Prettify<{
+    [K in keyof ActionMap]: { type: K } & ActionBase & ActionMap[K];
+}[keyof ActionMap]>;
 
-type Action = DamageAction | HealAction;
+type ActionType<T extends keyof ActionMap> = Action & { type: T };
 
 interface HistoryItem {
     actions: Action[];
