@@ -1,7 +1,7 @@
 import { FluentProvider, makeStyles, webDarkTheme, webLightTheme } from "@fluentui/react-components";
 import { BrowserRouter } from "react-router";
 import Content from "./components/Content";
-import Context from "./components/context/Contexts";
+import { Context } from "./components/context/ContextProvider";
 import ThemeButton from "./components/ThemeButton";
 
 const useStyles = makeStyles({

@@ -1,5 +1,5 @@
 import { Field, SpinButton, SpinButtonOnChangeData } from "@fluentui/react-components";
-import { getSpinButtonValue } from "../util";
+import { getSpinButtonValue } from "../util/input_util";
 
 interface Props {
     label: string;

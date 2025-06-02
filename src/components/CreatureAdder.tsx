@@ -11,7 +11,8 @@ import {
     SpinButtonProps,
     tokens,
 } from "@fluentui/react-components";
-import { createSetterInput, createSetterSpinButton, emptyCreature, isValidCreature } from "../util";
+import { createSetterInput, createSetterSpinButton } from "../util/input_util";
+import { emptyCreature, isValidCreature } from "../util/creature_util";
 import { useState } from "react";
 
 interface Props {

@@ -1,5 +1,6 @@
-import { Avatar, Button, Caption1, Card, CardHeader, Text } from "@fluentui/react-components";
+import { Button, Caption1, Card, CardHeader, Text } from "@fluentui/react-components";
 import { DismissRegular } from "@fluentui/react-icons";
+import { makeAvatar } from "../util/component_util";
 import { ReactNode } from "react";
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
 
 function damageHeader(action: ActionType<"damage">) {
     const type = action.damageType;
-    const avatar = <Avatar icon={type.icon} size={24} />;
+    const avatar = makeAvatar(type);
 
     if (action.targets.length === 1) {
         return <Text>{action.amount} {avatar} {type.name} damage to {action.targets[0].name}</Text>;
@@ -20,7 +21,7 @@ function damageHeader(action: ActionType<"damage">) {
 
 function healHeader(action: ActionType<"heal">) {
     const type = action.healType;
-    const avatar = <Avatar icon={type.icon} size={24} />;
+    const avatar = makeAvatar(type);
 
     if (type.type === "normal") {
         return action.targets.length === 1

@@ -1,4 +1,16 @@
 import {
+    ArrowEnterFilled,
+    ArrowExitFilled,
+    CheckmarkFilled,
+    DeleteFilled,
+    DismissFilled,
+    EditRegular,
+    HeartFilled,
+    HeartOffRegular,
+    HistoryRegular,
+    MoreVerticalFilled,
+} from "@fluentui/react-icons";
+import {
     Button,
     createTableColumn,
     DataGrid,
@@ -28,16 +40,11 @@ import {
     Text,
     tokens,
 } from "@fluentui/react-components";
-import {
-    CheckmarkFilled,
-    DeleteFilled,
-    DismissFilled,
-    EditRegular,
-    HeartFilled,
-    HeartOffRegular,
-    MoreVerticalFilled,
-} from "@fluentui/react-icons";
-import { cloneWithout, createSetterInput, createSetterSpinButton, isValidCreature, sharedStyles } from "../util";
+import { createSetterInput, createSetterSpinButton } from "../util/input_util";
+import { cloneWithout } from "../util/object_util";
+import { isValidCreature } from "../util/creature_util";
+import { sharedStyles } from "../util/shared_styles";
+import { useHistoryDialog } from "./hooks/useHistoryDialog";
 import { useState } from "react";
 
 enum ColId {
@@ -101,10 +108,11 @@ const useStyles = makeStyles({
 const useSharedStyles = sharedStyles();
 
 export default function CreatureGrid({ creatures, activeCreature, editData }: Readonly<Props>) {
+    const [editingIds, setEditingIds] = useState<Record<string, Creature>>({});
+    const showHistoryDialog = useHistoryDialog();
+
     const classes = useStyles();
     const sharedClasses = useSharedStyles();
-
-    const [editingIds, setEditingIds] = useState<Record<string, Creature>>({});
 
     function isEditing(creature: Creature) {
         return creature.id in editingIds;
@@ -128,6 +136,13 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
         stopEditingCreature(creature);
     }
 
+    function showHistory(creature: Creature, incoming: boolean) {
+        showHistoryDialog({
+            creature: creature,
+            type: incoming ? "incoming" : "outgoing",
+        });
+    }
+
     function setterInput(id: Guid, property: keyof Creature): InputProps["onChange"] {
         const setCreature = (creature: OptionalNull<Creature>) =>
             isValidCreature(creature) && editCreature(creature);
@@ -139,6 +154,56 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
         const setCreature = (creature: OptionalNull<Creature>) =>
             isValidCreature(creature) && editCreature(creature);
         return createSetterSpinButton([editingIds[id], setCreature], property, subProperty);
+    }
+
+    function actionButtons(creature: Creature) {
+        if (isEditing(creature)) {
+            return (
+                <div className={classes.actionButtonContainer}>
+                    <Button icon={<DismissFilled/>} onClick={() => stopEditingCreature(creature)}/>
+                    <Button icon={<CheckmarkFilled/>} onClick={() => saveEditedCreature(creature)}/>
+                </div>
+            );
+        }
+        return (
+            <div className={classes.actionButtonContainer}>
+                <Menu>
+                    <MenuTrigger>
+                        <Button icon={<HistoryRegular />} />
+                    </MenuTrigger>
+                    <MenuPopover>
+                        <MenuList>
+                            <MenuItem
+                                icon={<ArrowEnterFilled style={{ rotate: "180deg" }} />}
+                                onClick={() => showHistory(creature, true)}
+                            >Incoming history</MenuItem>
+                            <MenuItem
+                                icon={<ArrowExitFilled />}
+                                onClick={() => showHistory(creature, false)}
+                            >Outgoing history</MenuItem>
+                        </MenuList>
+                    </MenuPopover>
+                </Menu>
+                <Menu>
+                    <MenuTrigger>
+                        <Button icon={<MoreVerticalFilled />} />
+                    </MenuTrigger>
+                    <MenuPopover>
+                        <MenuList>
+                            <MenuItem
+                                icon={<EditRegular/>}
+                                onClick={() => startEditingCreature(creature)}
+                            >Edit</MenuItem>
+                            <MenuItem
+                                className={sharedClasses.danger}
+                                icon={<DeleteFilled className={sharedClasses.dangerHover}/>}
+                                onClick={() => editData.deleteCreature(creature)}
+                            >Delete</MenuItem>
+                        </MenuList>
+                    </MenuPopover>
+                </Menu>
+            </div>
+        );
     }
 
     const columns: TableColumnDefinition<Creature>[] = [
@@ -230,35 +295,10 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
         createTableColumn<Creature>({
             columnId: ColId.Actions,
             renderHeaderCell: () => <Text />,
-            renderCell: creature => {
-                const button = isEditing(creature)
-                    ? <div className={classes.actionButtonContainer}>
-                            <Button icon={<DismissFilled />} onClick={() => stopEditingCreature(creature)} />
-                            <Button icon={<CheckmarkFilled />} onClick={() => saveEditedCreature(creature)}/>
-                        </div>
-                    : <Menu>
-                            <MenuTrigger>
-                                <Button icon={<MoreVerticalFilled/>}/>
-                            </MenuTrigger>
-                            <MenuPopover>
-                                <MenuList>
-                                    <MenuItem
-                                        icon={<EditRegular/>}
-                                        onClick={() => startEditingCreature(creature)}
-                                    >Edit</MenuItem>
-                                    <MenuItem
-                                        className={sharedClasses.danger}
-                                        icon={<DeleteFilled className={sharedClasses.dangerHover}/>}
-                                        onClick={() => editData.deleteCreature(creature)}
-                                    >Delete</MenuItem>
-                                </MenuList>
-                            </MenuPopover>
-                        </Menu>;
-                return <>
-                    <div style={{ flexGrow: 1 }}/>
-                    {button}
-                </>;
-            },
+            renderCell: creature => <>
+                <div style={{ flexGrow: 1 }}/>
+                {actionButtons(creature)}
+            </>,
         }),
     ];
 

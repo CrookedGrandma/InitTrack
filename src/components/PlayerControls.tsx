@@ -1,12 +1,14 @@
 import { actionsByCreature, applyActions } from "../actions";
 import { Button, Divider, makeStyles, mergeClasses, Text, Title2, tokens } from "@fluentui/react-components";
-import { cloneWithUpdated, getDiff, sharedStyles, sortByName } from "../util";
 import { Dispatch, useMemo } from "react";
 import { FastForwardRegular, PlayRegular, StopRegular } from "@fluentui/react-icons";
+import { getDiff, sortByName } from "../util/creature_util";
+import { cloneWithUpdated } from "../util/object_util";
 import DamageDialog from "./dialogs/DamageDialog";
 import HealDialog from "./dialogs/HealDialog";
 import { LuWand } from "react-icons/lu";
 import PendingAction from "./PendingAction";
+import { sharedStyles } from "../util/shared_styles";
 
 export interface PlayerState {
     isPlaying: boolean;
@@ -130,7 +132,7 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
         let newState = cloneWithUpdated(state, "activeCreatureId", nextCreature.id);
 
         if (resultingCreatures.length > 0) {
-            const newHistory = resultingCreatures.map(result => ({
+            const newHistory: HistoryItem[] = resultingCreatures.map(result => ({
                 actions: groupedActions[result.id],
                 effect: getDiff(creatureMap[result.id], result),
             }));

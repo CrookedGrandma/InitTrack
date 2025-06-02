@@ -1,5 +1,5 @@
 import { Button, makeStyles } from "@fluentui/react-components";
-import Context from "./context/Contexts";
+import { Context } from "./context/ContextProvider";
 import { DarkThemeFilled } from "@fluentui/react-icons";
 
 const useStyles = makeStyles({

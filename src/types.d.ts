@@ -57,7 +57,7 @@ type Action = Prettify<{
     [K in keyof ActionMap]: { type: K } & ActionBase & ActionMap[K];
 }[keyof ActionMap]>;
 
-type ActionType<T extends keyof ActionMap> = Action & { type: T };
+type ActionType<T extends keyof ActionMap> = Extract<Action, { type: T }>;
 
 interface HistoryItem {
     actions: Action[];

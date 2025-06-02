@@ -1,8 +1,9 @@
-import { applyEffect, findCreature } from "../../util";
+import { applyEffect, findCreature } from "../../util/creature_util";
 import { makeStyles, Title1 } from "@fluentui/react-components";
 import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
 import CreatureAdder from "../CreatureAdder";
 import CreatureGrid from "../CreatureGrid";
+import HistoryDialog from "../dialogs/HistoryDialog";
 import { useState } from "react";
 
 const tempData: Creature[] = [
@@ -96,5 +97,6 @@ export default function Player() {
             state={{ state: playerState, setState: setPlayerState }}
             applyHistory={applyHistory}
         />
+        <HistoryDialog historyItems={history} />
     </>;
 }
