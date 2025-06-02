@@ -10,6 +10,14 @@ type OptionalNull<T extends AnyObject> = {
         : T[K] | null;
 };
 
+// Makes a Discriminated Union of all the given types, with a `type` property that is the key of the type.
+// Optionally adds the `TAdd` type to all types.
+type DiscoUnion<TMap extends AnyObject, TAdd = never> = Prettify<{
+    [P in keyof TMap]: { type: P } & (TAdd extends never ? object : TAdd) & TMap[P]
+}[keyof TMap]>;
+// Selects a specific type from the given Discriminated Union.
+type DiscoUnionType<TUnion extends DiscoUnion<AnyObject>, T extends TUnion["type"]> = Extract<TUnion, { type: T }>;
+
 type Parent<T = ReactNode> = Readonly<{ children: T }>;
 type DefaultValue<T> = Readonly<{ defaultValue: T }>;
 
@@ -53,13 +61,12 @@ interface ActionMap {
     };
 }
 
-type Action = Prettify<{
-    [K in keyof ActionMap]: { type: K } & ActionBase & ActionMap[K];
-}[keyof ActionMap]>;
-
-type ActionType<T extends keyof ActionMap> = Extract<Action, { type: T }>;
+type Action = DiscoUnion<ActionMap, ActionBase>;
+type ActionType<T extends Action["type"]> = DiscoUnionType<Action, T>;
 
 interface HistoryItem {
+    round: number;
+    initiative: number;
     actions: Action[];
     effect: CreatureEffect;
 }

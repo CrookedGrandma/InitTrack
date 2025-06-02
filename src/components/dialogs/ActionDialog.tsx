@@ -18,7 +18,7 @@ import {
 import { ReactNode, useState } from "react";
 import { sortByName } from "../../util/creature_util";
 
-type Props<T extends keyof ActionMap> = {
+type Props<T extends Action["type"]> = {
     creatures: Creature[];
     triggerLabel: string;
     triggerIcon: ButtonProps["icon"];
@@ -47,7 +47,7 @@ const useStyles = makeStyles({
     },
 });
 
-export default function ActionDialog<T extends keyof ActionMap>({
+export default function ActionDialog<T extends Action["type"]>({
     creatures,
     triggerLabel,
     triggerIcon,

@@ -14,6 +14,7 @@ export interface PlayerState {
     isPlaying: boolean;
     activeCreatureId: Guid | undefined;
     pendingActions: Action[];
+    round: number;
 }
 
 export function defaultPlayerState(): PlayerState {
@@ -21,6 +22,7 @@ export function defaultPlayerState(): PlayerState {
         isPlaying: false,
         activeCreatureId: undefined,
         pendingActions: [],
+        round: 1,
     };
 }
 
@@ -100,15 +102,15 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
             return;
         }
         const startPlayer = initiativeOrder[0];
-        let newState = cloneWithUpdated(state, "isPlaying", true);
-        newState = cloneWithUpdated(newState, "activeCreatureId", startPlayer.id);
-        setState(newState);
+        setState({
+            ...state,
+            isPlaying: true,
+            activeCreatureId: startPlayer.id,
+        });
     }
 
     function stopPlaying() {
-        let newState = cloneWithUpdated(state, "isPlaying", false);
-        newState = cloneWithUpdated(newState, "activeCreatureId", undefined);
-        setState(newState);
+        setState(defaultPlayerState());
     }
     const stopButton = <Button icon={<StopRegular />} onClick={stopPlaying} />;
 
@@ -125,27 +127,35 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
     }
 
     function clickEndTurn() {
+        let round = state.round;
         let nextIndex = activeIndex + 1;
-        if (nextIndex >= initiativeOrder.length)
+        if (nextIndex >= initiativeOrder.length) {
             nextIndex = 0;
+            round++;
+        }
         const nextCreature = initiativeOrder[nextIndex];
-        let newState = cloneWithUpdated(state, "activeCreatureId", nextCreature.id);
 
         if (resultingCreatures.length > 0) {
             const newHistory: HistoryItem[] = resultingCreatures.map(result => ({
+                round: state.round,
+                initiative: activeCreature?.initiative ?? 0,
                 actions: groupedActions[result.id],
                 effect: getDiff(creatureMap[result.id], result),
             }));
             applyHistory(newHistory);
         }
-        newState = cloneWithUpdated(newState, "pendingActions", []);
 
-        setState(newState);
+        setState({
+            ...state,
+            activeCreatureId: nextCreature.id,
+            round: round,
+            pendingActions: [],
+        });
     }
 
-    function removeHistoryItem(item: Action) {
-        const newHistory = state.pendingActions.filter(h => h !== item);
-        setState(cloneWithUpdated(state, "pendingActions", newHistory));
+    function removePendingAction(item: Action) {
+        const newPending = state.pendingActions.filter(h => h !== item);
+        setState(cloneWithUpdated(state, "pendingActions", newPending));
     }
 
     let header, controls, effects;
@@ -164,7 +174,7 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
     else {
         header = (
             <div className={classes.header}>
-                <Title2>{activeCreature.name}&#39;s turn</Title2>
+                <Title2>Round {state.round} – {activeCreature.name}&#39;s turn</Title2>
                 {stopButton}
             </div>
         );
@@ -192,7 +202,7 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
                 <fieldset className={mergeClasses(classes.fieldset, classes.effectsSection)}>
                     <legend>Effects</legend>
                     {state.pendingActions.map(a =>
-                        <PendingAction key={a.id} action={a} removeAction={removeHistoryItem} />)}
+                        <PendingAction key={a.id} action={a} removeAction={removePendingAction} />)}
                     <Divider />
                     <div>
                         <Text>Targeted creatures after this turn:</Text>

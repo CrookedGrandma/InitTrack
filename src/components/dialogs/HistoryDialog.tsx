@@ -10,6 +10,7 @@ import {
 } from "@fluentui/react-components";
 import { Context } from "../context/ContextProvider";
 import { distinctBy } from "../../util/object_util";
+import { joinCommaAnd } from "../../util/string_util";
 import { makeAvatar } from "../../util/component_util";
 import { ReactNode } from "react";
 
@@ -18,13 +19,14 @@ interface Props {
 }
 
 function actionToStringOutgoing(a: Action): ReactNode {
+    const targets = joinCommaAnd(a.targets.map(t => t.name));
     if (a.type === "damage")
-        return <>Did {a.amount} {makeAvatar(a.damageType)} {a.damageType.name} damage to {a.targets.map(t => t.name).join(", ")}</>;
+        return <>Did {a.amount} {makeAvatar(a.damageType)} {a.damageType.name} damage to {targets}</>;
     if (a.type === "heal") {
         const avatar = makeAvatar(a.healType);
         if (a.healType.type === "normal")
-            return <>{avatar} Healed {a.targets.map(t => t.name).join(", ")} for {a.amount} HP</>;
-        return <>Gave {a.targets.map(t => t.name).join(", ")} {a.amount} {avatar} temporary HP</>;
+            return <>{avatar} Healed {targets} for {a.amount} HP</>;
+        return <>Gave {targets} {a.amount} {avatar} temporary HP</>;
     }
     throw Error("unsupported action type");
 }
@@ -41,6 +43,26 @@ function actionToStringIncoming(a: Action): ReactNode {
     throw Error("unsupported action type");
 }
 
+type FlatAction = Pick<HistoryItem, "round" | "initiative"> & Action;
+
+function generateListItems(
+    historyItems: HistoryItem[],
+    actionToString: (action: FlatAction) => ReactNode,
+): ReactNode[] {
+    const flatActions = historyItems.flatMap(i =>
+        i.actions.map<FlatAction>(a => ({
+            ...a,
+            round: i.round,
+            initiative: i.initiative,
+        })),
+    );
+
+    return distinctBy(flatActions, "id")
+        .map(a => (
+            <li key={a.id}>Round {a.round} (i{a.initiative}): {actionToString(a)}</li>
+        ));
+}
+
 export default function HistoryDialog({ historyItems }: Readonly<Props>) {
     const historyContext = Context.HistoryDialog.useValue();
     const value = historyContext.value;
@@ -51,16 +73,16 @@ export default function HistoryDialog({ historyItems }: Readonly<Props>) {
 
         let listItems;
         if (value.type === "outgoing") {
-            const filtered = historyItems.filter(i => i.actions.some(a => a.source.id === value.creature.id));
-            const actions = distinctBy(filtered.flatMap(i => i.actions), "id");
-            listItems = actions.map<[Guid, ReactNode]>(a => [a.id, actionToStringOutgoing(a)])
-                .map(a => <li key={a[0]}>{a[1]}</li>);
+            listItems = generateListItems(
+                historyItems.filter(i => i.actions.some(a => a.source.id === value.creature.id)),
+                actionToStringOutgoing,
+            );
         }
         else {
-            const filtered = historyItems.filter(i => i.effect.target.id === value.creature.id);
-            listItems = filtered.flatMap(i => i.actions)
-                .map<[Guid, ReactNode]>(a => [a.id, actionToStringIncoming(a)])
-                .map(a => <li key={a[0]}>{a[1]}</li>);
+            listItems = generateListItems(
+                historyItems.filter(i => i.effect.target.id === value.creature.id),
+                actionToStringIncoming,
+            );
         }
         content = listItems.length > 0 ? <ul>{listItems}</ul> : "No history yet";
     }
