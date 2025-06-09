@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { useLSState } from "./useLSState";
 
 interface ValueContext<T> {
     value: T;
@@ -7,21 +8,21 @@ interface ValueContext<T> {
 
 /**
  * Creates a context with a value of the given type and a corresponding setter function
- * @param name The name of the context (for debugging purposes)
+ * @param name The name of the context (for debugging & local storage purposes)
  */
 export function createValueContext<T>(name: string) {
     const Context = createContext<ValueContext<T> | undefined>(undefined);
     Context.displayName = name;
 
     function Provider({ children, defaultValue }: Parent & DefaultValue<T>) {
-        const [value, setValue] = useState<T>(defaultValue);
+        const [value, setValue] = useLSState<T>(name, defaultValue);
 
         const contextValue = useMemo(() => {
             return {
                 value,
                 setValue,
             } as ValueContext<T>;
-        }, [value]);
+        }, [value, setValue]);
 
         return <Context.Provider value={contextValue}>{children}</Context.Provider>;
     }

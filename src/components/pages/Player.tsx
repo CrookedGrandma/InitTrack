@@ -1,12 +1,13 @@
 import { applyEffect, exportCreatures, findCreature } from "../../util/creature_util";
 import { Button, makeStyles, Title1 } from "@fluentui/react-components";
-import { ComponentProps, useState } from "react";
 import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
+import { ComponentProps } from "react";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import CreatureAdder from "../CreatureAdder";
 import CreatureGrid from "../CreatureGrid";
 import HistoryDialog from "../dialogs/HistoryDialog";
 import { SaveRegular } from "@fluentui/react-icons";
+import { useLSState } from "../hooks/useLSState";
 
 const tempData: Creature[] = [
     {
@@ -75,10 +76,10 @@ const useStyles = makeStyles({
 export default function Player() {
     const classes = useStyles();
 
-    const [creatures, setCreatures] = useState<Creature[]>(tempData);
-    const [playerState, setPlayerState] = useState<PlayerState>(defaultPlayerState());
-    const [history, setHistory] = useState<HistoryItem[][]>([]);
-    const [historyIndex, setHistoryIndex] = useState<number>(0);
+    const [creatures, setCreatures] = useLSState<Creature[]>("creatures", tempData);
+    const [playerState, setPlayerState] = useLSState<PlayerState>("playerState", defaultPlayerState());
+    const [history, setHistory] = useLSState<HistoryItem[][]>("history", []);
+    const [historyIndex, setHistoryIndex] = useLSState<number>("historyIndex", 0);
 
     function updateCreatures(updated: Creature[]) {
         setCreatures(creatures.map(c => updated.find(u => u.id === c.id) ?? c));

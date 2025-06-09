@@ -2,6 +2,7 @@ type AnyObject = { [key: string]: any };
 type AnyFunction = (...args: any[]) => any;
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 type Guid = ReturnType<typeof crypto.randomUUID>;
+type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
 // Recursively makes all properties of the given type accept null as a value
 type OptionalNull<T extends AnyObject> = {
