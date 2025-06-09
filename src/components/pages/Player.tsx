@@ -151,7 +151,12 @@ export default function Player() {
             </div>
         </div>
         <div id="table-container" className={classes.container}>
-            <CreatureGrid creatures={creatures} activeCreature={playerState.activeCreatureId} editData={editData} />
+            <CreatureGrid
+                creatures={creatures}
+                activeCreature={playerState.activeCreatureId}
+                editData={editData}
+                isPlaying={playerState.isPlaying}
+            />
         </div>
         <CreatureAdder addCreature={editData.addCreature} />
         <PlayerControls

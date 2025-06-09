@@ -79,6 +79,7 @@ interface Props {
         deleteCreature: (creature: Creature) => void;
         updateCreature: (creature: Creature) => void;
     };
+    isPlaying: boolean;
 }
 
 const useStyles = makeStyles({
@@ -107,7 +108,7 @@ const useStyles = makeStyles({
 });
 const useSharedStyles = sharedStyles();
 
-export default function CreatureGrid({ creatures, activeCreature, editData }: Readonly<Props>) {
+export default function CreatureGrid({ creatures, activeCreature, editData, isPlaying }: Readonly<Props>) {
     const [editingIds, setEditingIds] = useState<Record<string, Creature>>({});
     const showHistoryDialog = useHistoryDialog();
 
@@ -193,6 +194,8 @@ export default function CreatureGrid({ creatures, activeCreature, editData }: Re
                             <MenuItem
                                 icon={<EditRegular/>}
                                 onClick={() => startEditingCreature(creature)}
+                                disabled={isPlaying}
+                                subText={isPlaying ? "Cannot edit while playing" : undefined}
                             >Edit</MenuItem>
                             <MenuItem
                                 className={sharedClasses.danger}

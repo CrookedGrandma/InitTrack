@@ -12,8 +12,8 @@ type OptionalNull<T extends AnyObject> = {
 
 // Makes a Discriminated Union of all the given types, with a `type` property that is the key of the type.
 // Optionally adds the `TAdd` type to all types.
-type DiscoUnion<TMap extends AnyObject, TAdd = never> = Prettify<{
-    [P in keyof TMap]: { type: P } & (TAdd extends never ? object : TAdd) & TMap[P]
+type DiscoUnion<TMap extends AnyObject, TAdd = undefined> = Prettify<{
+    [P in keyof TMap]: { type: P } & (TAdd extends undefined ? object : TAdd) & TMap[P]
 }[keyof TMap]>;
 // Selects a specific type from the given Discriminated Union.
 type DiscoUnionType<TUnion extends DiscoUnion<AnyObject>, T extends TUnion["type"]> = Extract<TUnion, { type: T }>;
