@@ -44,14 +44,15 @@ export function getDiff(before: Creature, after: Creature): CreatureEffect {
     };
 }
 
-export function applyEffect(creature: Creature, effect: CreatureEffect): Creature {
+export function applyEffect(creature: Creature, effect: CreatureEffect, reverse: boolean = false): Creature {
+    const mod = reverse ? -1 : 1;
     return {
         ...creature,
         hp: {
-            current: creature.hp.current + (effect.hp?.current ?? 0),
-            max: creature.hp.max + (effect.hp?.max ?? 0),
-            temp: creature.hp.temp + (effect.hp?.temp ?? 0),
+            current: creature.hp.current + mod * (effect.hp?.current ?? 0),
+            max: creature.hp.max + mod * (effect.hp?.max ?? 0),
+            temp: creature.hp.temp + mod * (effect.hp?.temp ?? 0),
         },
-        ac: creature.ac + (effect.ac ?? 0),
+        ac: creature.ac + mod * (effect.ac ?? 0),
     };
 }

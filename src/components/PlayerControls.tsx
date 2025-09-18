@@ -1,7 +1,19 @@
 import { actionsByCreature, applyActions } from "../actions";
-import { Button, Divider, makeStyles, mergeClasses, Text, Title2, tokens } from "@fluentui/react-components";
+import {
+    Button,
+    Divider,
+    makeStyles,
+    mergeClasses,
+    MessageBar,
+    MessageBarBody,
+    MessageBarTitle,
+    Text,
+    Title2,
+    tokens,
+    Tooltip,
+} from "@fluentui/react-components";
 import { Dispatch, useMemo } from "react";
-import { FastForwardRegular, PlayRegular, StopRegular } from "@fluentui/react-icons";
+import { FastForwardRegular, PlayRegular, RewindRegular, StopRegular } from "@fluentui/react-icons";
 import { getDiff, sortByName } from "../util/creature_util";
 import { cloneWithUpdated } from "../util/object_util";
 import DamageDialog from "./dialogs/DamageDialog";
@@ -32,7 +44,14 @@ interface Props {
         state: PlayerState;
         setState: Dispatch<PlayerState>;
     };
-    applyHistory: (items: HistoryItem[]) => void;
+    history: {
+        history: HistoryItem[][];
+        historyIndex: number;
+        addHistory: (items: HistoryItem[]) => void;
+        rewindHistory: () => void;
+        forwardHistory: () => void;
+        removeFutureHistory: () => void;
+    };
 }
 
 const useStyles = makeStyles({
@@ -74,7 +93,7 @@ const useStyles = makeStyles({
 });
 const useSharedClasses = sharedStyles();
 
-export default function PlayerControls({ creatures, state: { state, setState }, applyHistory }: Readonly<Props>) {
+export default function PlayerControls({ creatures, state: { state, setState }, history }: Readonly<Props>) {
     const classes = useStyles();
     const sharedClasses = useSharedClasses();
 
@@ -96,6 +115,8 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
         return sortedTargets.map(t => applyActions(t, groupedActions[t.id]));
     }, [groupedActions, creatureMap]);
 
+    const isInCurrentTime = history.historyIndex >= history.history.length;
+
     function startPlaying() {
         if (creatures.length === 0) {
             alert("Add some creatures to start playing!");
@@ -107,6 +128,48 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
             isPlaying: true,
             activeCreatureId: startPlayer.id,
         });
+    }
+
+    function goToPreviousTurn(): void {
+        let round = state.round;
+        let previousIndex = activeIndex - 1;
+        if (previousIndex < 0) {
+            previousIndex = initiativeOrder.length - 1;
+            round--;
+        }
+        const previousCreature = initiativeOrder[previousIndex];
+        setState({
+            ...state,
+            activeCreatureId: previousCreature.id,
+            round: round,
+            pendingActions: [],
+        });
+    }
+
+    function goToNextTurn(): void {
+        let round = state.round;
+        let nextIndex = activeIndex + 1;
+        if (nextIndex >= initiativeOrder.length) {
+            nextIndex = 0;
+            round++;
+        }
+        const nextCreature = initiativeOrder[nextIndex];
+        setState({
+            ...state,
+            activeCreatureId: nextCreature.id,
+            round: round,
+            pendingActions: [],
+        });
+    }
+
+    function rewindHistory() {
+        history.rewindHistory();
+        goToPreviousTurn();
+    }
+
+    function forwardHistory() {
+        history.forwardHistory();
+        goToNextTurn();
     }
 
     function stopPlaying() {
@@ -127,30 +190,18 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
     }
 
     function clickEndTurn() {
-        let round = state.round;
-        let nextIndex = activeIndex + 1;
-        if (nextIndex >= initiativeOrder.length) {
-            nextIndex = 0;
-            round++;
-        }
-        const nextCreature = initiativeOrder[nextIndex];
+        if (!isInCurrentTime)
+            history.removeFutureHistory();
 
-        if (resultingCreatures.length > 0) {
-            const newHistory: HistoryItem[] = resultingCreatures.map(result => ({
-                round: state.round,
-                initiative: activeCreature?.initiative ?? 0,
-                actions: groupedActions[result.id],
-                effect: getDiff(creatureMap[result.id], result),
-            }));
-            applyHistory(newHistory);
-        }
+        const newHistory: HistoryItem[] = resultingCreatures.map(result => ({
+            round: state.round,
+            initiative: activeCreature?.initiative ?? 0,
+            actions: groupedActions[result.id],
+            effect: getDiff(creatureMap[result.id], result),
+        }));
+        history.addHistory(newHistory);
 
-        setState({
-            ...state,
-            activeCreatureId: nextCreature.id,
-            round: round,
-            pendingActions: [],
-        });
+        goToNextTurn();
     }
 
     function removePendingAction(item: Action) {
@@ -161,7 +212,7 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
     let header, controls, effects;
 
     if (!state.isPlaying) {
-        controls = <Button icon={<PlayRegular/>} onClick={startPlaying}/>;
+        controls = <Button icon={<PlayRegular/>} onClick={startPlaying} />;
     }
     else if (!activeCreature) {
         controls = <>
@@ -175,10 +226,26 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
         header = (
             <div className={classes.header}>
                 <Title2>Round {state.round} – {activeCreature.name}&#39;s turn</Title2>
-                {stopButton}
+                <div className={classes.buttonGroup}>
+                    <Tooltip content="Go backward one turn" relationship="label">
+                        <Button
+                            icon={<RewindRegular />}
+                            disabled={history.historyIndex <= 0}
+                            onClick={rewindHistory}
+                        />
+                    </Tooltip>
+                    <Tooltip content="Go forward one turn" relationship="label">
+                        <Button
+                            icon={<FastForwardRegular />}
+                            disabled={isInCurrentTime}
+                            onClick={forwardHistory}
+                        />
+                    </Tooltip>
+                    {stopButton}
+                </div>
             </div>
         );
-        controls = (
+        controls = <>
             <fieldset className={mergeClasses(classes.fieldset, classes.controlButtons)}>
                 <legend>Controls</legend>
                 <div className={classes.buttonGroup}>
@@ -196,7 +263,13 @@ export default function PlayerControls({ creatures, state: { state, setState }, 
                 </div>
                 <Button onClick={clickEndTurn} icon={<FastForwardRegular />}>End turn</Button>
             </fieldset>
-        );
+            {!isInCurrentTime && <MessageBar intent="warning">
+                <MessageBarBody>
+                    <MessageBarTitle>You&#39;re back in history</MessageBarTitle>
+                    Ending a turn now will remove all &#39;future&#39; actions from history.
+                </MessageBarBody>
+            </MessageBar>}
+        </>;
         if (state.pendingActions.length > 0) {
             effects = (
                 <fieldset className={mergeClasses(classes.fieldset, classes.effectsSection)}>

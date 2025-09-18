@@ -7,6 +7,7 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
+    makeStyles,
 } from "@fluentui/react-components";
 import { Context } from "../context/ContextProvider";
 import { distinctBy } from "../../util/object_util";
@@ -15,8 +16,15 @@ import { makeAvatar } from "../../util/component_util";
 import { ReactNode } from "react";
 
 interface Props {
-    historyItems: HistoryItem[];
+    history: HistoryItem[][];
+    historyIndex: number;
 }
+
+const useStyles = makeStyles({
+    inactive: {
+        color: "gray",
+    },
+});
 
 function actionToStringOutgoing(a: Action): ReactNode {
     const targets = joinCommaAnd(a.targets.map(t => t.name));
@@ -48,6 +56,7 @@ type FlatAction = Pick<HistoryItem, "round" | "initiative"> & Action;
 function generateListItems(
     historyItems: HistoryItem[],
     actionToString: (action: FlatAction) => ReactNode,
+    classes: string,
 ): ReactNode[] {
     const flatActions = historyItems.flatMap(i =>
         i.actions.map<FlatAction>(a => ({
@@ -59,11 +68,13 @@ function generateListItems(
 
     return distinctBy(flatActions, "id")
         .map(a => (
-            <li key={a.id}>Round {a.round} (i{a.initiative}): {actionToString(a)}</li>
+            <li key={a.id} className={classes}>Round {a.round} (i{a.initiative}): {actionToString(a)}</li>
         ));
 }
 
-export default function HistoryDialog({ historyItems }: Readonly<Props>) {
+export default function HistoryDialog({ history, historyIndex }: Readonly<Props>) {
+    const classes = useStyles();
+
     const historyContext = Context.HistoryDialog.useValue();
     const value = historyContext.value;
 
@@ -73,16 +84,18 @@ export default function HistoryDialog({ historyItems }: Readonly<Props>) {
 
         let listItems;
         if (value.type === "outgoing") {
-            listItems = generateListItems(
-                historyItems.filter(i => i.actions.some(a => a.source.id === value.creature.id)),
+            listItems = history.map((turnHistory, i) => generateListItems(
+                turnHistory.filter(i => i.actions.some(a => a.source.id === value.creature.id)),
                 actionToStringOutgoing,
-            );
+                i >= historyIndex ? classes.inactive : "",
+            )).flat();
         }
         else {
-            listItems = generateListItems(
-                historyItems.filter(i => i.effect.target.id === value.creature.id),
+            listItems = history.map((turnHistory, i) => generateListItems(
+                turnHistory.filter(i => i.effect.target.id === value.creature.id),
                 actionToStringIncoming,
-            );
+                i >= historyIndex ? classes.inactive : "",
+            )).flat();
         }
         content = listItems.length > 0 ? <ul>{listItems}</ul> : "No history yet";
     }
