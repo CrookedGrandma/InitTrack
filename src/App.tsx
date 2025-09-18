@@ -20,9 +20,11 @@ export default function App() {
 
     const classes = useStyles();
 
+    const basename = new URL(import.meta.env.BASE_URL, window.location.href).pathname;
+
     return (
         <FluentProvider id="fluent-root" theme={darkTheme.value ? webDarkTheme : webLightTheme}>
-            <BrowserRouter>
+            <BrowserRouter basename={basename}>
                 <ThemeButton />
                 <div id="app" className={classes.app}>
                     <Content />
