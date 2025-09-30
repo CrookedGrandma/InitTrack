@@ -2,6 +2,7 @@ import { applyEffect, findCreature } from "../../util/creature_util";
 import { ComponentProps, useState } from "react";
 import { makeStyles, Title1 } from "@fluentui/react-components";
 import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import CreatureAdder from "../CreatureAdder";
 import CreatureGrid from "../CreatureGrid";
 import HistoryDialog from "../dialogs/HistoryDialog";
@@ -56,6 +57,17 @@ const tempData: Creature[] = [
 const useStyles = makeStyles({
     container: {
         width: "100%",
+    },
+    header: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        width: "100%",
+    },
+    buttonGroup: {
+        display: "flex",
+        alignItems: "start",
+        gap: "0.5rem",
     },
 });
 
@@ -117,8 +129,25 @@ export default function Player() {
         removeFutureHistory: () => setHistory(history => history.slice(0, historyIndex)),
     };
 
+    function clearState() {
+        setCreatures([]);
+        setPlayerState(defaultPlayerState());
+        setHistory([]);
+        setHistoryIndex(0);
+    }
+
     return <>
-        <Title1>Playing</Title1>
+        <div className={classes.header}>
+            <Title1>Playing</Title1>
+            <div className={classes.buttonGroup}>
+                <ConfirmationDialog
+                    btnLabel="Clear"
+                    title="Clear everything"
+                    message="Do you want to clear all creatures and history?"
+                    onConfirm={clearState}
+                />
+            </div>
+        </div>
         <div id="table-container" className={classes.container}>
             <CreatureGrid creatures={creatures} activeCreature={playerState.activeCreatureId} editData={editData} />
         </div>
