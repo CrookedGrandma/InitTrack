@@ -1,3 +1,5 @@
+import { utils, writeFile } from "xlsx";
+
 export function emptyCreature(): OptionalNull<Creature> {
     return {
         id: crypto.randomUUID(),
@@ -55,4 +57,21 @@ export function applyEffect(creature: Creature, effect: CreatureEffect, reverse:
         },
         ac: creature.ac + mod * (effect.ac ?? 0),
     };
+}
+export function flatten(creature: Creature) {
+    return {
+        id: creature.id,
+        initiative: creature.initiative,
+        name: creature.name,
+        hp_current: creature.hp.current,
+        hp_max: creature.hp.max,
+        hp_temp: creature.hp.temp,
+        ac: creature.ac,
+    };
+}
+
+export function exportCreatures(creatures: Creature[]): void {
+    const worksheet = utils.json_to_sheet(creatures.map(flatten));
+    const workbook = utils.book_new(worksheet, "creatures");
+    writeFile(workbook, "creatures.xlsx");
 }

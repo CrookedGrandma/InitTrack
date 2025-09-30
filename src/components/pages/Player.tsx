@@ -1,11 +1,12 @@
-import { applyEffect, findCreature } from "../../util/creature_util";
+import { applyEffect, exportCreatures, findCreature } from "../../util/creature_util";
+import { Button, makeStyles, Title1 } from "@fluentui/react-components";
 import { ComponentProps, useState } from "react";
-import { makeStyles, Title1 } from "@fluentui/react-components";
 import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import CreatureAdder from "../CreatureAdder";
 import CreatureGrid from "../CreatureGrid";
 import HistoryDialog from "../dialogs/HistoryDialog";
+import { SaveRegular } from "@fluentui/react-icons";
 
 const tempData: Creature[] = [
     {
@@ -140,6 +141,7 @@ export default function Player() {
         <div className={classes.header}>
             <Title1>Playing</Title1>
             <div className={classes.buttonGroup}>
+                <Button icon={<SaveRegular />} onClick={() => exportCreatures(creatures)}>Export</Button>
                 <ConfirmationDialog
                     btnLabel="Clear"
                     title="Clear everything"
