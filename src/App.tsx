@@ -1,5 +1,4 @@
 import { FluentProvider, makeStyles, webDarkTheme, webLightTheme } from "@fluentui/react-components";
-import { BrowserRouter } from "react-router";
 import Content from "./components/Content";
 import { Context } from "./components/context/ContextProvider";
 import ThemeButton from "./components/ThemeButton";
@@ -20,16 +19,12 @@ export default function App() {
 
     const classes = useStyles();
 
-    const basename = new URL(import.meta.env.BASE_URL, window.location.href).pathname;
-
     return (
         <FluentProvider id="fluent-root" theme={darkTheme.value ? webDarkTheme : webLightTheme}>
-            <BrowserRouter basename={basename}>
-                <ThemeButton />
-                <div id="app" className={classes.app}>
-                    <Content />
-                </div>
-            </BrowserRouter>
+            <ThemeButton />
+            <div id="app" className={classes.app}>
+                <Content />
+            </div>
         </FluentProvider>
     );
 }

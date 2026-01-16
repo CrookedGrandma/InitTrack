@@ -1,10 +1,6 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
-import { Route, Routes } from "react-router";
-import Builder from "./pages/Builder";
 import Header from "./Header";
-import Home from "./pages/Home";
-import Paths from "./pages/paths";
-import Player from "./pages/Player";
+import Player from "./Player";
 
 const useStyles = makeStyles({
     content: {
@@ -26,10 +22,6 @@ export default function Content() {
 
     return <div id="content" className={classes.content}>
         <Header />
-        <Routes>
-            <Route index element={<Home />} />
-            <Route path={Paths.Builder} element={<Builder />} />
-            <Route path={Paths.Player} element={<Player />} />
-        </Routes>
+        <Player />
     </div>;
 }

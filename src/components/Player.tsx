@@ -1,13 +1,13 @@
-import { applyEffect, exportCreatures, findCreature } from "../../util/creature_util";
+import { applyEffect, exportCreatures, findCreature } from "../util/creature_util";
 import { Button, makeStyles, Title1 } from "@fluentui/react-components";
-import PlayerControls, { defaultPlayerState, PlayerState } from "../PlayerControls";
+import PlayerControls, { defaultPlayerState, PlayerState } from "./PlayerControls";
 import { ComponentProps } from "react";
-import ConfirmationDialog from "../dialogs/ConfirmationDialog";
-import CreatureAdder from "../CreatureAdder";
-import CreatureGrid from "../CreatureGrid";
-import HistoryDialog from "../dialogs/HistoryDialog";
+import ConfirmationDialog from "./dialogs/ConfirmationDialog";
+import CreatureAdder from "./CreatureAdder";
+import CreatureGrid from "./CreatureGrid";
+import HistoryDialog from "./dialogs/HistoryDialog";
 import { SaveRegular } from "@fluentui/react-icons";
-import { useLSState } from "../hooks/useLSState";
+import { useLSState } from "./hooks/useLSState";
 
 const tempData: Creature[] = [
     {
