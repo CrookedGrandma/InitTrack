@@ -30,7 +30,7 @@ export function createValueContext<T>(name: string) {
     function useValue() {
         const context = useContext(Context);
         if (!context)
-            throw Error(`The hook for the ${name} context must be used within its Provider.`);
+            throw new Error(`The hook for the ${name} context must be used within its Provider.`);
         return context;
     }
 

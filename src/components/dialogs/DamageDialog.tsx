@@ -34,10 +34,10 @@ export default function DamageDialog({ activeCreature, creatures, processDamage 
 
     function createAction(targets: CreatureReference[]): ActionType<"damage"> {
         if (!damage)
-            throw Error("Damage was not set correctly");
+            throw new Error("Damage was not set correctly");
         const type = damageTypes.find(t => selectedTypes[0] == t.name);
         if (!type)
-            throw Error("Damage type was not set correctly");
+            throw new Error("Damage type was not set correctly");
         return {
             id: crypto.randomUUID(),
             type: "damage",

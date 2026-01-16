@@ -19,11 +19,13 @@ type DiscoUnion<TMap extends AnyObject, TAdd = undefined> = Prettify<{
 // Selects a specific type from the given Discriminated Union.
 type DiscoUnionType<TUnion extends DiscoUnion<AnyObject>, T extends TUnion["type"]> = Extract<TUnion, { type: T }>;
 
+type PrefixKeys<T extends AnyObject, Prefix extends string> = { [K in keyof T as `${Prefix}${K}`]: T[K] };
+
 type Parent<T = ReactNode> = Readonly<{ children: T }>;
 type DefaultValue<T> = Readonly<{ defaultValue: T }>;
 
 interface Creature {
-    readonly id: Guid;
+    id: Guid;
     initiative: number;
     name: string;
     hp: {
@@ -37,6 +39,8 @@ interface Creature {
 type CreatureReference = Pick<Creature, "id" | "name">;
 
 type CreatureEffect = { target: CreatureReference } & Partial<Pick<Creature, "hp" | "ac">>;
+
+type FlatCreature = Omit<Creature, "hp"> & PrefixKeys<Creature["hp"], "hp_">;
 
 interface NameIcon {
     name: string;

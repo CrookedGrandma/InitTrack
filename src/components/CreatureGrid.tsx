@@ -36,24 +36,17 @@ import {
     SpinButtonProps,
     TableCellLayout,
     TableColumnDefinition,
-    TableColumnSizingOptions,
     Text,
     tokens,
 } from "@fluentui/react-components";
 import { createSetterInput, createSetterSpinButton } from "../util/input_util";
 import { cloneWithout } from "../util/object_util";
+import { ColId } from "../constants";
+import { creatureGridColumnSizes } from "../util/component_util";
 import { isValidCreature } from "../util/creature_util";
 import { sharedStyles } from "../util/shared_styles";
 import { useHistoryDialog } from "./hooks/useHistoryDialog";
 import { useState } from "react";
-
-enum ColId {
-    Initiative = "initiative",
-    Name = "name",
-    HP = "hp",
-    AC = "ac",
-    Actions = "actions",
-}
 
 type ValState = FieldProps["validationState"];
 type PBColor = ProgressBarProps["color"];
@@ -123,12 +116,12 @@ export default function CreatureGrid({ creatures, activeCreature, editData, isPl
     }
     function editCreature(creature: Creature, shouldClone: boolean = false) {
         if (!shouldClone && !isEditing(creature))
-            throw Error("Creature is not being edited");
+            throw new Error("Creature is not being edited");
         setEditingIds({ ...editingIds, [creature.id]: shouldClone ? { ...creature } : creature });
     }
     function stopEditingCreature(creature: Creature) {
         if (!isEditing(creature))
-            throw Error("Creature was not being edited");
+            throw new Error("Creature was not being edited");
         setEditingIds(cloneWithout(editingIds, creature.id));
     }
     function saveEditedCreature(creature: Creature) {
@@ -217,7 +210,6 @@ export default function CreatureGrid({ creatures, activeCreature, editData, isPl
             renderCell: creature => <TableCellLayout>
                 {isEditing(creature)
                     ? <SpinButton
-                            // step={1}
                             value={editingIds[creature.id].initiative}
                             onChange={setterSpinButton(creature.id, "initiative")}
                         />
@@ -306,30 +298,7 @@ export default function CreatureGrid({ creatures, activeCreature, editData, isPl
     ];
 
     const currentlyEditing = Object.keys(editingIds).length > 0;
-    const initAcBaseWidth = 20;
-    const initAcWidth = currentlyEditing ? 64 : initAcBaseWidth;
-    const nameWidth = 250 + initAcBaseWidth - initAcWidth;
-    const colSizes: TableColumnSizingOptions = {
-        [ColId.Initiative]: {
-            minWidth: initAcWidth,
-            idealWidth: initAcWidth,
-        },
-        [ColId.Name]: {
-            autoFitColumns: true,
-            idealWidth: nameWidth,
-        },
-        [ColId.HP]: {
-            minWidth: currentlyEditing ? 300 : 100,
-            idealWidth: 300,
-        },
-        [ColId.AC]: {
-            minWidth: initAcWidth,
-            idealWidth: initAcWidth,
-        },
-        [ColId.Actions]: {
-            minWidth: currentlyEditing ? 72 : 32,
-        },
-    };
+    const colSizes = creatureGridColumnSizes(currentlyEditing);
 
     return (
         <DataGrid

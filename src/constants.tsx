@@ -36,3 +36,13 @@ export const healTypes: HealType[] = [
     { type: "normal", name: "Permanent", icon: <GiHealthNormal /> },
     { type: "temp", name: "Temporary", icon: <GiHealthIncrease /> },
 ];
+
+export enum ColId {
+    Initiative = "initiative",
+    Name = "name",
+    HP = "hp",
+    AC = "ac",
+    Actions = "actions",
+}
+
+export const xlsxSheetName = "creatures";

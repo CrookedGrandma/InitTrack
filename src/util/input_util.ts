@@ -13,7 +13,7 @@ export function createSetterInput(
     property: keyof Creature): InputProps["onChange"] {
     return (_: any, data: InputOnChangeData) => {
         if (!creature)
-            throw Error("No creature is set");
+            throw new Error("No creature is set");
         setCreature({ ...creature, [property]: data.value });
     };
 }
@@ -24,7 +24,7 @@ export function createSetterSpinButton<K extends keyof Creature>(
     subProperty?: keyof Creature[K]): SpinButtonProps["onChange"] {
     return (_: any, data: SpinButtonOnChangeData) => {
         if (!creature)
-            throw Error("No creature is set");
+            throw new Error("No creature is set");
         const value = getSpinButtonValue(data);
         const propertyValue = subProperty
             ? { ...creature[property] as AnyObject, [subProperty]: value }

@@ -75,7 +75,7 @@ export default function ActionDialog<T extends Action["type"]>({
     function submit() {
         const to = creatures.filter(c => selectedCreatures.includes(c.id));
         if (to.length === 0)
-            throw Error("No creatures were selected");
+            throw new Error("No creatures were selected");
         const action = createAction(to);
         processAction(action);
         clear();

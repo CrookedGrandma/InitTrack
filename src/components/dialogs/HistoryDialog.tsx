@@ -36,7 +36,7 @@ function actionToStringOutgoing(a: Action): ReactNode {
             return <>{avatar} Healed {targets} for {a.amount} HP</>;
         return <>Gave {targets} {a.amount} {avatar} temporary HP</>;
     }
-    throw Error("unsupported action type");
+    throw new Error("unsupported action type");
 }
 
 function actionToStringIncoming(a: Action): ReactNode {
@@ -48,7 +48,7 @@ function actionToStringIncoming(a: Action): ReactNode {
             return <>{avatar} Healed for {a.amount} HP by {a.source.name}</>;
         return <>{a.amount} {avatar} temporary HP given by {a.source.name}</>;
     }
-    throw Error("unsupported action type");
+    throw new Error("unsupported action type");
 }
 
 type FlatAction = Pick<HistoryItem, "round" | "initiative"> & Action;
@@ -84,18 +84,18 @@ export default function HistoryDialog({ history, historyIndex }: Readonly<Props>
 
         let listItems;
         if (value.type === "outgoing") {
-            listItems = history.map((turnHistory, i) => generateListItems(
+            listItems = history.flatMap((turnHistory, i) => generateListItems(
                 turnHistory.filter(i => i.actions.some(a => a.source.id === value.creature.id)),
                 actionToStringOutgoing,
                 i >= historyIndex ? classes.inactive : "",
-            )).flat();
+            ));
         }
         else {
-            listItems = history.map((turnHistory, i) => generateListItems(
+            listItems = history.flatMap((turnHistory, i) => generateListItems(
                 turnHistory.filter(i => i.effect.target.id === value.creature.id),
                 actionToStringIncoming,
                 i >= historyIndex ? classes.inactive : "",
-            )).flat();
+            ));
         }
         content = listItems.length > 0 ? <ul>{listItems}</ul> : "No history yet";
     }

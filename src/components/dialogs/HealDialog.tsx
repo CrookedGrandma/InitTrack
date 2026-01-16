@@ -27,10 +27,10 @@ export default function HealDialog({ activeCreature, creatures, processHeal }: R
 
     function createAction(targets: CreatureReference[]): ActionType<"heal"> {
         if (!amount)
-            throw Error("Amount was not set correctly");
+            throw new Error("Amount was not set correctly");
         const type = healTypes.find(t => selectedTypes[0] == t.type);
         if (!type)
-            throw Error("Heal type was not set correctly");
+            throw new Error("Heal type was not set correctly");
         return {
             id: crypto.randomUUID(),
             type: "heal",

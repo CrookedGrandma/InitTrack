@@ -6,6 +6,7 @@ import ConfirmationDialog from "./dialogs/ConfirmationDialog";
 import CreatureAdder from "./CreatureAdder";
 import CreatureGrid from "./CreatureGrid";
 import HistoryDialog from "./dialogs/HistoryDialog";
+import ImportDialog from "./dialogs/ImportDialog";
 import { SaveRegular } from "@fluentui/react-icons";
 import { useLSState } from "./hooks/useLSState";
 
@@ -142,6 +143,7 @@ export default function Player() {
         <div className={classes.header}>
             <Title1>Playing</Title1>
             <div className={classes.buttonGroup}>
+                <ImportDialog setCreatures={setCreatures} />
                 <Button icon={<SaveRegular />} onClick={() => exportCreatures(creatures)}>Export</Button>
                 <ConfirmationDialog
                     btnLabel="Clear"

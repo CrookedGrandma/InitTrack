@@ -1,4 +1,5 @@
 import { utils, writeFile } from "xlsx";
+import { xlsxSheetName } from "../constants";
 
 export function emptyCreature(): OptionalNull<Creature> {
     return {
@@ -26,7 +27,7 @@ export function isValidCreature(creature: OptionalNull<Creature>): creature is C
 export function findCreature(creatures: Creature[], target: CreatureReference): Creature {
     const creature = creatures.find(c => c.id === target.id);
     if (!creature)
-        throw Error("Creature not found");
+        throw new Error("Creature not found");
     return creature;
 }
 
@@ -58,7 +59,7 @@ export function applyEffect(creature: Creature, effect: CreatureEffect, reverse:
         ac: creature.ac + mod * (effect.ac ?? 0),
     };
 }
-export function flatten(creature: Creature) {
+export function flatten(creature: Creature): FlatCreature {
     return {
         id: creature.id,
         initiative: creature.initiative,
@@ -70,8 +71,23 @@ export function flatten(creature: Creature) {
     };
 }
 
+export function unflatten(creature: FlatCreature): Creature {
+    return {
+        id: creature.id,
+        initiative: creature.initiative,
+        name: creature.name,
+        hp: {
+            current: creature.hp_current,
+            max: creature.hp_max,
+            temp: creature.hp_temp,
+        },
+        ac: creature.ac,
+    };
+}
+
 export function exportCreatures(creatures: Creature[]): void {
     const worksheet = utils.json_to_sheet(creatures.map(flatten));
-    const workbook = utils.book_new(worksheet, "creatures");
+    worksheet["!cols"] = [{ wpx: 0 }]; // hide ID column
+    const workbook = utils.book_new(worksheet, xlsxSheetName);
     writeFile(workbook, "creatures.xlsx");
 }
