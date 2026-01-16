@@ -1,3 +1,4 @@
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import importNewlines from "eslint-plugin-import-newlines";
 import jsxA11y from "eslint-plugin-jsx-a11y";
@@ -7,15 +8,15 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import stylistic from "@stylistic/eslint-plugin";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config([
+export default defineConfig([
     { files: ["**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"] },
     { ignores: ["dist/*"] },
     { languageOptions: { globals: globals.browser } },
     pluginJs.configs.recommended,
-    ...tseslint.configs.recommended,
+    tseslint.configs.recommended,
     react.configs.flat.recommended,
     { settings: { react: { version: "detect" } } },
-    reactHooks.configs["recommended-latest"],
+    reactHooks.configs.flat["recommended-latest"],
     jsxA11y.flatConfigs.recommended,
     stylistic.configs.customize({
         indent: 4,
